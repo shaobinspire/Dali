@@ -1,0 +1,18 @@
+{
+   "direction":"horizontal",
+   "children":[
+      {
+         "name":"A",
+         "width":200,
+         "height":200,
+         "horizontal_policy":"fixed",
+         "vertical_policy":"expanding"
+      },
+      {
+         "name":"B",
+         "width":300,
+         "height":200,
+         "policy":"expanding"
+      }
+   ]
+}
