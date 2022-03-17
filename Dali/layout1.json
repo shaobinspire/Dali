@@ -1,19 +1,17 @@
 {
-   
-      "direction":"vertical",
-      "children":[
-         {
-            "name":"A",
-            "width":100,
-            "height":100,
-            "policy":"fixed"
-         },
-         {
-            "name":"B",
-            "width":100,
-            "height":100,
-            "policy":"expanding"
-         }
-      ]
-   
+  "direction": "vertical",
+  "items": [
+    {
+      "name": "A",
+      "width": 100,
+      "height": 100,
+      "policy": "fixed"
+    },
+    {
+      "name": "B",
+      "width": 100,
+      "height": 100,
+      "policy": "expanding"
+    }
+  ]
 }

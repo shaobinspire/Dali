@@ -1,78 +1,78 @@
 {
-   "direction":"vertical",
-   "children":[
-      {
-         "direction":"horizontal",
-         "children":[
+  "direction": "vertical",
+  "items": [
+    {
+      "direction": "horizontal",
+      "items": [
+        {
+          "name": "A",
+          "width": 200,
+          "height": 200,
+          "policy": "expanding"
+        },
+        {
+          "direction": "vertical",
+          "items": [
             {
-               "name":"A",
-               "width":200,
-               "height":200,
-               "policy":"expanding"
+              "direction": "horizontal",
+              "items": [
+                {
+                  "name": "B",
+                  "width": 300,
+                  "height": 100,
+                  "policy": "fixed"
+                },
+                {
+                  "name": "C",
+                  "width": 100,
+                  "height": 100,
+                  "policy": "expanding"
+                }
+              ]
             },
             {
-               "direction":"vertical",
-               "children":[
-                  {
-                     "direction":"horizontal",
-                     "children":[
-                        {
-                           "name":"B",
-                           "width":300,
-                           "height":100,
-                           "policy":"fixed"
-                        },
-                        {
-                           "name":"C",
-                           "width":100,
-                           "height":100,
-                           "policy":"expanding"
-                        }
-                     ]
-                  },
-                  {
-                     "direction":"horizontal",
-                     "children":[
-                        {
-                           "name":"D",
-                           "width":100,
-                           "height":100,
-                           "policy":"expanding"
-                        },
-                        {
-                           "name":"E",
-                           "width":300,
-                           "height":100,
-                           "policy":"fixed"
-                        }
-                     ]
-                  }
-               ]
+              "direction": "horizontal",
+              "items": [
+                {
+                  "name": "D",
+                  "width": 100,
+                  "height": 100,
+                  "policy": "expanding"
+                },
+                {
+                  "name": "E",
+                  "width": 300,
+                  "height": 100,
+                  "policy": "fixed"
+                }
+              ]
             }
-         ]
-      },
-      {
-         "direction":"horizontal",
-         "children":[
-            {
-               "name":"F",
-               "width":100,
-               "height":200,
-               "policy":"fixed"
-            },
-            {
-               "name":"G",
-               "width":400,
-               "height":200,
-               "policy":"expanding"
-            },
-            {
-               "name":"H",
-               "width":100,
-               "height":200,
-               "policy":"fixed"
-            }
-         ]
-      }
-   ]
+          ]
+        }
+      ]
+    },
+    {
+      "direction": "horizontal",
+      "items": [
+        {
+          "name": "F",
+          "width": 100,
+          "height": 200,
+          "policy": "fixed"
+        },
+        {
+          "name": "G",
+          "width": 400,
+          "height": 200,
+          "policy": "expanding"
+        },
+        {
+          "name": "H",
+          "width": 100,
+          "height": 200,
+          "policy": "fixed"
+        }
+      ]
+    }
+  ]
 }

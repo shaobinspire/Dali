@@ -9,6 +9,10 @@
 
 using namespace Dali;
 
+const auto MIN_SCALE_FACTOR = 0.2;
+const auto MAX_SCALE_FACTOR = 8;
+const auto SCALE_FACTOR_STEP = 0.2;
+
 MainWindow::MainWindow()
     : m_scale(1.0) {
   auto central_widget = new QWidget(this);
@@ -68,15 +72,15 @@ void MainWindow::open() {
 }
 
 void MainWindow::zoom_in() {
-  if(m_scale < 6) {
-    m_scale += 0.25;
+  if(m_scale < MAX_SCALE_FACTOR) {
+    m_scale += SCALE_FACTOR_STEP;
   }
   update_size();
 }
 
 void MainWindow::zoom_out() {
-  if(m_scale > 0.25) {
-    m_scale -= 0.25;
+  if(m_scale > MIN_SCALE_FACTOR) {
+    m_scale -= SCALE_FACTOR_STEP;
   }
   update_size();
 }
@@ -92,7 +96,7 @@ void MainWindow::update_size() {
     centralWidget()->adjustSize();
     adjustSize();
   }
-  m_zoom_in_action->setEnabled(m_scale < 6);
-  m_zoom_out_action->setEnabled(m_scale > 0.25);
+  m_zoom_in_action->setEnabled(m_scale < MAX_SCALE_FACTOR);
+  m_zoom_out_action->setEnabled(m_scale > MIN_SCALE_FACTOR);
   m_normal_size_action->setEnabled(true);
 }

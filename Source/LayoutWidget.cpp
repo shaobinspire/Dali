@@ -21,50 +21,49 @@ LayoutBox::SizePolicy get_size_policy(const std::string& policy) {
   return LayoutBox::SizePolicy::Expanding;
 }
 
-Layout* parse(const json& json, QPoint& pos) {
-  auto& children = json["children"];
-  auto orignal_pos = pos;
+std::unique_ptr<Layout> parse(const json& json, QPoint& pos) {
+  if(!json.contains("direction") || !json.contains("items")) {
+    return nullptr;
+  }
   auto direction = get_direction(json["direction"]);
-  auto layout = new Layout(direction);
+  auto orignal_pos = pos;
+  auto layout = std::make_unique<Layout>(direction);
   layout->set_pos(pos);
-  auto update_layout_rect = [&] (LayoutBase* item) {
+  auto update_pos = [&] (LayoutItem& item) {
     if(layout->get_direction() == Layout::Direction::HORIZONTAL) {
-      pos = {pos.x() + item->get_width(), orignal_pos.y()};
-      layout->set_size({layout->get_width() + item->get_width(),
-        item->get_height()});
+      pos = {pos.x() + item.get_size().width(), orignal_pos.y()};
     } else {
-      pos = {orignal_pos.x(), pos.y() + item->get_height()};
-      layout->set_size({item->get_width(),
-        layout->get_height() + item->get_height()});
+      pos = {orignal_pos.x(), pos.y() + item.get_size().height()};
     }
   };
-  for(auto& child : children) {
-    if(!child.contains("direction")) {
-      auto box = new LayoutBox();
-      if(child.contains("name")) {
-        box->set_name(QString::fromStdString(child["name"].get<std::string>()));
+  auto& items = json["items"];
+  for(auto& item : items) {
+    if(!item.contains("direction")) {
+      auto box = std::make_unique<LayoutBox>();
+      if(item.contains("name")) {
+        box->set_name(QString::fromStdString(item["name"].get<std::string>()));
       }
-      box->set_rect({pos.x(), pos.y(), child["width"], child["height"]});
-      if(child.contains("policy")) {
-        auto size_policy = get_size_policy(child["policy"]);
+      box->set_rect({pos.x(), pos.y(), item["width"], item["height"]});
+      if(item.contains("policy")) {
+        auto size_policy = get_size_policy(item["policy"]);
         box->set_horizontal_size_policy(size_policy);
         box->set_vertical_size_policy(size_policy);
       } else {
-        if(child.contains("horizontal_policy")) {
+        if(item.contains("horizontal_policy")) {
           box->set_horizontal_size_policy(
-            get_size_policy(child["horizontal_policy"]));
+            get_size_policy(item["horizontal_policy"]));
         }
-        if(child.contains("vertical_policy")) {
+        if(item.contains("vertical_policy")) {
           box->set_vertical_size_policy(
-            get_size_policy(child["vertical_policy"]));
+            get_size_policy(item["vertical_policy"]));
         }
       }
-      update_layout_rect(box);
-      layout->add_child(box);
+      update_pos(*box);
+      layout->add_item(std::move(box));
     } else {
-      auto child_layout = parse(child, pos);
-      update_layout_rect(child_layout);
-      layout->add_child(child_layout);
+      auto child_layout = parse(item, pos);
+      update_pos(*child_layout);
+      layout->add_item(std::move(child_layout));
     }
   }
   return layout;
@@ -83,8 +82,10 @@ bool LayoutWidget::parse_json_file(const QString& name) {
     return false;
   }
   auto pos = QPoint();
-  m_layout = std::unique_ptr<Layout>(parse(m_json, pos));
-  setFixedSize(m_layout->get_rect().size());
+  m_layout = std::move(parse(m_json, pos));
+  if(m_layout) {
+    setFixedSize(m_layout->get_rect().size());
+  }
   return true;
 }
 
@@ -97,8 +98,7 @@ void LayoutWidget::set_scale(double scale) {
     return;
   }
   m_scale = scale;
-  setFixedSize({static_cast<int>(m_layout->get_width() * m_scale),
-    static_cast<int>(m_layout->get_height() * m_scale)});
+  setFixedSize(m_layout->get_size() * m_scale);
 }
 
 void LayoutWidget::paintEvent(QPaintEvent* event) {

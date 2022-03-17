@@ -6,14 +6,8 @@ Layout::Layout()
   : Layout(Direction::HORIZONTAL) {}
 
 Layout::Layout(Direction direction)
-  : LayoutBase(),
+  : LayoutItem(),
     m_direction(direction) {}
-
-Layout::~Layout() {
-  for(auto child : m_children) {
-    delete child;
-  }
-}
 
 Layout::Direction Layout::get_direction() const {
   return m_direction;
@@ -23,23 +17,23 @@ void Layout::set_direction(Direction direction) {
   m_direction = direction;
 }
 
-void Layout::add_child(LayoutBase* child) {
-  m_children.push_back(child);
-}
-
-int Layout::get_size() const {
-  return static_cast<int>(m_children.size());
-}
-
-LayoutBase* Layout::get_child(int index) {
-  if(index < 0 || index >= get_size()) {
-    return nullptr;
+void Layout::add_item(std::unique_ptr<LayoutItem> item) {
+  if(m_direction == Layout::Direction::HORIZONTAL) {
+    set_size({get_size().width() + item->get_size().width(),
+      std::max(item->get_size().height(), get_size().height())});
+  } else {
+    set_size({std::max(item->get_size().width(), get_size().width()),
+      get_size().height() + item->get_size().height()});
   }
-  return m_children[index];
+  m_items.push_back(std::move(item));
+}
+
+int Layout::get_item_size() const {
+  return static_cast<int>(m_items.size());
 }
 
 void Layout::draw(QPainter& painter) {
-  for(auto child : m_children) {
-    child->draw(painter);
+  for(auto& item : m_items) {
+    item->draw(painter);
   }
 }

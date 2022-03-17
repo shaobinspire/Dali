@@ -2,11 +2,11 @@
 #define DALI_LAYOUTBOX_H
 #include <QString>
 #include "Dali.h"
-#include "LayoutBase.h"
+#include "LayoutItem.h"
 
 namespace Dali {
 
-  class LayoutBox : public LayoutBase {
+  class LayoutBox : public LayoutItem {
     public:
 
       enum class SizePolicy {

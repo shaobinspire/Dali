@@ -2,11 +2,11 @@
 #define DALI_LAYOUT_H
 #include <vector>
 #include "Dali.h"
-#include "LayoutBase.h"
+#include "LayoutItem.h"
 
 namespace Dali {
 
-  class Layout : public LayoutBase {
+  class Layout : public LayoutItem {
     public:
       enum class Direction {
         HORIZONTAL,
@@ -15,22 +15,19 @@ namespace Dali {
 
       Layout();
       explicit Layout(Direction direction);
-      ~Layout();
 
       Direction get_direction() const;
       void set_direction(Direction direction);
 
-      void add_child(LayoutBase* layout);
+      void add_item(std::unique_ptr<LayoutItem> item);
 
-      int get_size() const;
-
-      LayoutBase* get_child(int index);
+      int get_item_size() const;
 
       void draw(QPainter& painter) override;
 
     private:
       Direction m_direction;
-      std::vector<LayoutBase*> m_children;
+      std::vector<std::unique_ptr<LayoutItem>> m_items;
   };
 }
 
