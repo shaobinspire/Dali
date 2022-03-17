@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QResizeEvent>
 #include <QScreen>
+#include <QStatusBar>
 #include "Dali/LayoutWidget.hpp"
 
 using namespace Dali;
@@ -21,6 +22,7 @@ MainWindow::MainWindow()
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
+  statusBar()->showMessage(tr("Ready"));
   auto availableGeometry = screen()->availableGeometry();
   resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
   move((availableGeometry.width() - width()) / 2,
@@ -40,6 +42,10 @@ void MainWindow::create_menu() {
   auto file_menu = menuBar()->addMenu(tr("&File"));
   m_open_action = file_menu->addAction(tr("&Open..."), this, &MainWindow::open);
   m_open_action->setShortcuts(QKeySequence::Open);
+  m_refresh_action =
+    file_menu->addAction(tr("&Refresh"), this, &MainWindow::refresh);
+  m_refresh_action->setShortcuts(QKeySequence::Refresh);
+  m_refresh_action->setEnabled(false);
   auto view_menu = menuBar()->addMenu(tr("&View"));
   m_zoom_in_action =
     view_menu->addAction(tr("Zoom &In"), this, &MainWindow::zoom_in);
@@ -56,18 +62,27 @@ void MainWindow::create_menu() {
 }
 
 void MainWindow::open() {
-  auto file_name = QFileDialog::getOpenFileName(this);
-  if(!file_name.isEmpty()) {
-    if(!m_layout_widget->parse_json_file(file_name)) {
-      auto message_box = QMessageBox();
-      message_box.setIcon(QMessageBox::Warning);
-      message_box.setText("Invalid json file.");
-      message_box.exec();
-    } else {
-      normal_size();
-      centralWidget()->adjustSize();
-      adjustSize();
-    }
+  m_file_name = QFileDialog::getOpenFileName(this);
+  refresh();
+}
+
+void MainWindow::refresh() {
+  if(m_file_name.isEmpty()) {
+    m_refresh_action->setEnabled(false);
+    return;
+  }
+  if(!m_layout_widget->parse_json_file(m_file_name)) {
+    m_refresh_action->setEnabled(false);
+    auto message_box = QMessageBox();
+    message_box.setIcon(QMessageBox::Warning);
+    message_box.setText("Invalid json file.");
+    message_box.exec();
+  } else {
+    m_refresh_action->setEnabled(true);
+    normal_size();
+    centralWidget()->adjustSize();
+    adjustSize();
+    statusBar()->showMessage(m_file_name.split("/").back());
   }
 }
 

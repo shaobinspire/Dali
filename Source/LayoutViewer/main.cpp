@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <QtPlugin>
-#include "LayoutViewer/MainWindow.h"
+#include "LayoutViewer/MainWindow.hpp"
 
 #ifdef _MSC_VER
   Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)

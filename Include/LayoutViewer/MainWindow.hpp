@@ -15,13 +15,16 @@ namespace Dali {
     private:
       LayoutWidget* m_layout_widget;
       QAction* m_open_action;
+      QAction* m_refresh_action;
       QAction* m_zoom_in_action;
       QAction* m_zoom_out_action;
       QAction* m_normal_size_action;
+      QString m_file_name;
       double m_scale;
 
       void create_menu();
       void open();
+      void refresh();
       void zoom_in();
       void zoom_out();
       void normal_size();
