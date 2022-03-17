@@ -1,11 +1,11 @@
-#include "MainWindow.h"
+#include "LayoutViewer/MainWindow.hpp"
 #include <QFileDialog>
 #include <QLayout>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QResizeEvent>
 #include <QScreen>
-#include "LayoutWidget.h"
+#include "Dali/LayoutWidget.hpp"
 
 using namespace Dali;
 

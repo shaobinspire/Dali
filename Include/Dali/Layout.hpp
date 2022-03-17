@@ -1,8 +1,7 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
 #include <vector>
-#include "Dali.h"
-#include "LayoutItem.h"
+#include "LayoutItem.hpp"
 
 namespace Dali {
 

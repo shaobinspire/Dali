@@ -2,7 +2,7 @@
 #define DALI_LAYOUTWIDGET_H
 #include <QWidget>
 #include "nlohmann/json.hpp"
-#include "Layout.h"
+#include "Layout.hpp"
 
 namespace Dali {
 

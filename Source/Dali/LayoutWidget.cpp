@@ -1,8 +1,8 @@
-#include "LayoutWidget.h"
+#include "Dali/LayoutWidget.hpp"
 #include <fstream>
 #include <QApplication>
 #include <QDesktopWidget>
-#include "LayoutBox.h"
+#include "Dali/LayoutBox.hpp"
 
 using namespace Dali;
 using namespace nlohmann;

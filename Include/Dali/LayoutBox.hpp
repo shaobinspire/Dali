@@ -1,8 +1,7 @@
 #ifndef DALI_LAYOUTBOX_H
 #define DALI_LAYOUTBOX_H
 #include <QString>
-#include "Dali.h"
-#include "LayoutItem.h"
+#include "LayoutItem.hpp"
 
 namespace Dali {
 

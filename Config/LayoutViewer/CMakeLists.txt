@@ -1,15 +1,15 @@
 find_package(Qt5Widgets REQUIRED)
-file(GLOB_RECURSE header_files ${DALI_INCLUDE_PATH}/*.hpp)
-file(GLOB_RECURSE source_files ${DALI_SOURCE_PATH}/*.cpp)
+file(GLOB_RECURSE header_files ${DALI_INCLUDE_PATH}/LayoutViewer/*.hpp)
+file(GLOB_RECURSE source_files ${DALI_SOURCE_PATH}/LayoutViewer/*.cpp)
+# source_group("Header Files" FILES ${header_files})
+# source_group("Source Files" FILES ${source_files})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 if(WIN32)
   set(app_type WIN32)
 endif(WIN32)
-add_executable(Dali ${app_type} ${header_files} ${source_files})
-source_group("Header Files" FILES ${header_files})
-source_group("Source Files" FILES ${source_files})
-set_source_files_properties(${header_files} PROPERTIES HEADER_FILE_ONLY TRUE)
-target_link_libraries(Dali Resources
+add_executable(LayoutViewer ${app_type} ${header_files} ${source_files})
+# set_source_files_properties(${header_files} PROPERTIES HEADER_FILE_ONLY TRUE)
+target_link_libraries(LayoutViewer Library Resources
   debug ${QT_GIF_LIBRARY_DEBUG_PATH}
   optimized ${QT_GIF_LIBRARY_OPTIMIZED_PATH}
   debug ${QT_SVG_ICON_PLUGIN_LIBRARY_DEBUG_PATH}
@@ -35,7 +35,7 @@ target_link_libraries(Dali Resources
   debug ${QT_PCRE_LIBRARY_DEBUG_PATH}
   optimized ${QT_PCRE_LIBRARY_OPTIMIZED_PATH})
 if(WIN32)
-  target_link_libraries(Dali
+  target_link_libraries(LayoutViewer
     debug ${QT_THEME_LIBRARY_DEBUG_PATH}
     optimized ${QT_THEME_LIBRARY_OPTIMIZED_PATH}
     debug ${QT_FREETYPE_LIBRARY_DEBUG_PATH}
@@ -50,4 +50,4 @@ if(WIN32)
     version.lib winmm.lib ws2_32.lib Wtsapi32.lib)
 endif(WIN32)
 
-install(TARGETS Dali DESTINATION ${DALI_TESTS_INSTALL_DIRECTORY})
+install(TARGETS LayoutViewer DESTINATION ${DALI_TESTS_INSTALL_DIRECTORY})

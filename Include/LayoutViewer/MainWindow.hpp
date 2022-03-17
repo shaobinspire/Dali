@@ -1,8 +1,7 @@
 #ifndef DALI_MAIN_WINDOW_H
 #define DALI_MAIN_WINDOW_H
 #include <QMainWindow>
-#include <QMenu>
-#include "Dali.h"
+#include "Dali/Dali.hpp"
 
 namespace Dali {
 
