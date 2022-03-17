@@ -15,17 +15,22 @@ namespace Dali {
 
       Layout();
       explicit Layout(Direction direction);
+      ~Layout();
 
       Direction get_direction() const;
       void set_direction(Direction direction);
 
-      void add_child(std::unique_ptr<LayoutBase> layout);
+      void add_child(LayoutBase* layout);
 
-      void paint(QPainter& painter) override;
+      int get_size() const;
+
+      LayoutBase* get_child(int index);
+
+      void draw(QPainter& painter) override;
 
     private:
       Direction m_direction;
-      std::vector<std::unique_ptr<LayoutBase>> m_children;
+      std::vector<LayoutBase*> m_children;
   };
 }
 

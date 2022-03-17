@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <QtPlugin>
-#include "LayoutWidget.h"
+#include "MainWindow.h"
 
 #ifdef _MSC_VER
   Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
@@ -11,11 +11,13 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)
 using namespace Dali;
 
 int main(int argc, char** argv) {
+  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
+    Qt::HighDpiScaleFactorRoundingPolicy::Floor);
   auto application = new QApplication(argc, argv);
   application->setOrganizationName(QObject::tr("Spire Trading Inc"));
   application->setApplicationName(QObject::tr("Dali"));
-  auto widget = LayoutWidget();
-  widget.parse_json_file("layout.json");
-  widget.show();
+  MainWindow window;
+  window.show();
   application->exec();
 }

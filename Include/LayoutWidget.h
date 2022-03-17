@@ -10,15 +10,18 @@ namespace Dali {
     public:
       explicit LayoutWidget(QWidget* parent = nullptr);
 
-      void parse_json_file(const QString& name);
-      protected:
+      bool parse_json_file(const QString& name);
+
+      double get_scale() const;
+      void set_scale(double scale);
+
+    protected:
       void paintEvent(QPaintEvent* event) override;
 
     private:
       std::unique_ptr<Layout> m_layout;
       nlohmann::json m_json;
-      qreal m_scale_x;
-      qreal m_scale_y;
+      double m_scale;
   };
 }
 
