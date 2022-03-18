@@ -1,23 +1,26 @@
 {
     "direction":"horizontal",
-    "items":[
+    "items": [
         {
             "name":"A",
             "width":100,
             "height":200,
-            "policy":"expanding"
+            "horizontal_policy":"expanding",
+            "vertical_policy":"expanding"
         },
         {
             "name":"B",
             "width":200,
             "height":200,
-            "policy":"fixed"
+            "horizontal_policy":"fixed",
+            "vertical_policy":"expanding"
         },
         {
             "name":"B",
             "width":300,
             "height":200,
-            "policy":"expanding"
+            "horizontal_policy":"expanding",
+            "vertical_policy":"fixed"
         }
     ]
 }

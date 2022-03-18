@@ -46,15 +46,17 @@ void LayoutBox::draw(QPainter& painter) {
   if(get_horizontal_size_policy() == get_vertical_size_policy()) {
     painter.fillRect(rect, get_color(get_horizontal_size_policy()));
   } else {
-    painter.setPen(get_color(get_horizontal_size_policy()));
-    auto top_right = rect.topRight() + QPoint(1, 0);
-    auto bottom_left = rect.bottomLeft() + QPoint(0, 1);
-    auto bottom_right = rect.bottomRight() + QPoint(1, 1);
-    painter.drawLine(QLineF(rect.topLeft(), rect.bottomLeft()));
-    painter.drawLine(QLineF(top_right, bottom_right));
-    painter.setPen(get_color(get_vertical_size_policy()));
-    painter.drawLine(QLineF(rect.topLeft(), rect.topRight()));
-    painter.drawLine(QLineF(bottom_left, bottom_right));
+    auto top_left = rect.topLeft() + QPoint(1, 1);
+    auto top_right = rect.topRight() + QPoint(0, 1);
+    auto bottom_left = rect.bottomLeft() + QPoint(1, 0);
+    painter.setPen(QPen(QBrush(get_color(get_horizontal_size_policy())), 2,
+      Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+    painter.drawLine(QLineF(top_left, bottom_left));
+    painter.drawLine(QLineF(top_right, rect.bottomRight()));
+    painter.setPen(QPen(QBrush(get_color(get_vertical_size_policy())), 2,
+      Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
+    painter.drawLine(QLineF(top_left, top_right));
+    painter.drawLine(QLineF(bottom_left, rect.bottomRight()));
   }
   painter.setPen(Qt::black);
   auto position = QString("\n(%1, %2, %3, %4)").

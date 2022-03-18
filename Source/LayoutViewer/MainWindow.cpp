@@ -10,7 +10,7 @@
 
 using namespace Dali;
 
-const auto MIN_SCALE_FACTOR = 0.2;
+const auto MIN_SCALE_FACTOR = 0.4;
 const auto MAX_SCALE_FACTOR = 8;
 const auto SCALE_FACTOR_STEP = 0.2;
 
