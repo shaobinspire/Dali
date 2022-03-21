@@ -1,78 +1,18 @@
-{
-  "direction": "vertical",
-  "items": [
-    {
-      "direction": "horizontal",
-      "items": [
-        {
-          "name": "A",
-          "width": 200,
-          "height": 200,
-          "policy": "expanding"
-        },
-        {
-          "direction": "vertical",
-          "items": [
-            {
-              "direction": "horizontal",
-              "items": [
-                {
-                  "name": "B",
-                  "width": 300,
-                  "height": 100,
-                  "policy": "fixed"
-                },
-                {
-                  "name": "C",
-                  "width": 100,
-                  "height": 100,
-                  "policy": "expanding"
-                }
-              ]
-            },
-            {
-              "direction": "horizontal",
-              "items": [
-                {
-                  "name": "D",
-                  "width": 100,
-                  "height": 100,
-                  "policy": "expanding"
-                },
-                {
-                  "name": "E",
-                  "width": 300,
-                  "height": 100,
-                  "policy": "fixed"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "direction": "horizontal",
-      "items": [
-        {
-          "name": "F",
-          "width": 100,
-          "height": 200,
-          "policy": "fixed"
-        },
-        {
-          "name": "G",
-          "width": 400,
-          "height": 200,
-          "policy": "expanding"
-        },
-        {
-          "name": "H",
-          "width": 100,
-          "height": 200,
-          "policy": "fixed"
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "name": "A",
+    "x": 0,
+    "y": 0,
+    "width": 200,
+    "height": 200,
+    "policy": "fixed"
+  },
+  {
+    "name": "B",
+    "x": 200,
+    "y": 200,
+    "width": 200,
+    "height": 200,
+    "policy": "fixed"
+  }
+]

@@ -1,32 +1,28 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
 #include <vector>
-#include "LayoutItem.hpp"
+#include <QRect>
+#include "Dali/LayoutItem.hpp"
 
 namespace Dali {
 
-  class Layout : public LayoutItem {
+  class Layout {
     public:
-      enum class Direction {
-        HORIZONTAL,
-        VERTICAL
-      };
 
-      Layout();
-      explicit Layout(Direction direction);
+      Layout() = default;
 
-      Direction get_direction() const;
-      void set_direction(Direction direction);
+      QRect get_rect() const;
+      void set_rect(const QRect& rect);
 
-      void add_item(std::unique_ptr<LayoutItem> item);
+      void add_item(const LayoutItem& item);
 
       int get_item_size() const;
 
-      void draw(QPainter& painter) override;
+      const LayoutItem& get_item(int index) const;
 
     private:
-      Direction m_direction;
-      std::vector<std::unique_ptr<LayoutItem>> m_items;
+      QRect m_rect;
+      std::vector<LayoutItem> m_items;
   };
 }
 

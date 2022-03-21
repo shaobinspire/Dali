@@ -7,7 +7,12 @@ namespace Dali {
 
   class LayoutItem {
     public:
-      virtual ~LayoutItem() = default;
+      enum class SizePolicy {
+        Expanding,
+        Fixed
+      };
+
+      LayoutItem() = default;
 
       QRect get_rect() const;
       void set_rect(const QRect& rect);
@@ -18,13 +23,20 @@ namespace Dali {
       QSize get_size() const;
       void set_size(const QSize& size);
 
-      virtual void draw(QPainter& painter) = 0;
+      SizePolicy get_horizontal_size_policy() const;
+      void set_horizontal_size_policy(SizePolicy policy);
 
-    protected:
-      LayoutItem() = default;
+      SizePolicy get_vertical_size_policy() const;
+      void set_vertical_size_policy(SizePolicy policy);
+
+      QString get_name() const;
+      void set_name(const QString& name);
 
     private:
       QRect m_rect;
+      QString m_name;
+      SizePolicy m_horizontal_size_policy;
+      SizePolicy m_vertical_size_policy;
   };
 }
 #endif

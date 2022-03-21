@@ -25,3 +25,27 @@ QSize LayoutItem::get_size() const {
 void LayoutItem::set_size(const QSize& size) {
   m_rect.setSize(size);
 }
+
+LayoutItem::SizePolicy LayoutItem::get_horizontal_size_policy() const {
+  return m_horizontal_size_policy;
+}
+
+void LayoutItem::set_horizontal_size_policy(SizePolicy policy) {
+  m_horizontal_size_policy = policy;
+}
+
+LayoutItem::SizePolicy LayoutItem::get_vertical_size_policy() const {
+  return m_vertical_size_policy;
+}
+
+void LayoutItem::set_vertical_size_policy(SizePolicy policy) {
+  m_vertical_size_policy = policy;
+}
+
+QString LayoutItem::get_name() const {
+  return m_name;
+}
+
+void LayoutItem::set_name(const QString& name) {
+  m_name = name;
+}

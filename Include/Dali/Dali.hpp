@@ -6,7 +6,6 @@
 
 namespace Dali {
   class Layout;
-  class LayoutBox;
   class LayoutItem;
   class LayoutWidget;
 }
