@@ -1,8 +1,8 @@
-#ifndef DALI_LAYOUTWIDGET_H
-#define DALI_LAYOUTWIDGET_H
+#ifndef DALI_LAYOUT_WIDGET_H
+#define DALI_LAYOUT_WIDGET_H
 #include <QWidget>
 #include "nlohmann/json.hpp"
-#include "Layout.hpp"
+#include "Dali/Dali.hpp"
 
 namespace Dali {
 
@@ -14,6 +14,9 @@ namespace Dali {
 
       double get_scale() const;
       void set_scale(double scale);
+
+      QSize get_min_size() const;
+      QSize get_max_size() const;
 
     protected:
       void paintEvent(QPaintEvent* event) override;

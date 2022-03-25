@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     Qt::HighDpiScaleFactorRoundingPolicy::Floor);
   auto application = new QApplication(argc, argv);
   application->setOrganizationName(QObject::tr("Spire Trading Inc"));
-  application->setApplicationName(QObject::tr("Dali"));
+  application->setApplicationName(QObject::tr("DaliViewer"));
   MainWindow window;
   window.show();
   application->exec();

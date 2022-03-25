@@ -5,6 +5,13 @@
 #endif
 
 namespace Dali {
+  enum class SizePolicy {
+    Expanding,
+    Fixed
+  };
+
+  struct LayoutTree;
+  struct LayoutTreeNode;
   class Layout;
   class LayoutItem;
   class LayoutWidget;

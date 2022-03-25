@@ -26,7 +26,7 @@ void LayoutItem::set_size(const QSize& size) {
   m_rect.setSize(size);
 }
 
-LayoutItem::SizePolicy LayoutItem::get_horizontal_size_policy() const {
+SizePolicy LayoutItem::get_horizontal_size_policy() const {
   return m_horizontal_size_policy;
 }
 
@@ -34,7 +34,7 @@ void LayoutItem::set_horizontal_size_policy(SizePolicy policy) {
   m_horizontal_size_policy = policy;
 }
 
-LayoutItem::SizePolicy LayoutItem::get_vertical_size_policy() const {
+SizePolicy LayoutItem::get_vertical_size_policy() const {
   return m_vertical_size_policy;
 }
 

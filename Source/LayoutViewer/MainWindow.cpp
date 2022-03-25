@@ -22,6 +22,11 @@ MainWindow::MainWindow()
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
+  m_size_label = new QLabel();
+  //m_size_label->setWindowFlag(Qt::FramelessWindowHint);
+  //m_size_label->setAttribute(Qt::WA_NoSystemBackground);
+  //m_size_label->setAttribute(Qt::WA_TranslucentBackground);
+  statusBar()->addPermanentWidget(m_size_label);
   statusBar()->showMessage(tr("Ready"));
   auto availableGeometry = screen()->availableGeometry();
   resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
@@ -83,6 +88,10 @@ void MainWindow::refresh() {
     centralWidget()->adjustSize();
     adjustSize();
     statusBar()->showMessage(m_file_name.split("/").back());
+    auto min_size = m_layout_widget->get_min_size();
+    auto max_size = m_layout_widget->get_max_size();
+    m_size_label->setText(QString("min: %1x%2 max: %3x%4").arg(min_size.width()).
+      arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
   }
 }
 

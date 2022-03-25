@@ -1,14 +1,14 @@
 [
   {
-    "name": "A",
+    "name": "1",
     "x": 0,
     "y": 0,
     "width": 200,
     "height": 200,
-    "policy": "fixed"
+    "policy": "expanding"
   },
   {
-    "name": "B",
+    "name": "2",
     "x": 200,
     "y": 0,
     "width": 200,
@@ -16,15 +16,15 @@
     "policy": "fixed"
   },
   {
-    "name": "C",
+    "name": "3",
     "x": 400,
     "y": 0,
     "width": 200,
-    "height": 100,
+    "height": 200,
     "policy": "expanding"
   },
   {
-    "name": "D",
+    "name": "4",
     "x": 0,
     "y": 200,
     "width": 200,
@@ -32,43 +32,43 @@
     "policy": "fixed"
   },
   {
-    "name": "E",
+    "name": "5",
     "x": 200,
     "y": 200,
-    "width": 200,
-    "height": 100,
-    "policy": "expanding"
-  },
-  {
-    "name": "F",
-    "x": 400,
-    "y": 100,
     "width": 200,
     "height": 200,
     "policy": "fixed"
   },
   {
-    "name": "G",
+    "name": "6",
+    "x": 400,
+    "y": 200,
+    "width": 200,
+    "height": 200,
+    "policy": "fixed"
+  },
+  {
+    "name": "7",
     "x": 0,
     "y": 400,
     "width": 200,
-    "height": 100,
+    "height": 200,
     "policy": "expanding"
   },
   {
-    "name": "H",
+    "name": "8",
     "x": 200,
-    "y": 300,
+    "y": 400,
     "width": 200,
     "height": 200,
     "policy": "fixed"
   },
   {
-    "name": "I",
+    "name": "9",
     "x": 400,
-    "y": 300,
+    "y": 400,
     "width": 200,
     "height": 200,
-    "policy": "fixed"
+    "policy": "expanding"
   }
 ]

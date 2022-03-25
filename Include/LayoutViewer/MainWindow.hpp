@@ -1,5 +1,6 @@
 #ifndef DALI_MAIN_WINDOW_H
 #define DALI_MAIN_WINDOW_H
+#include <QLabel>
 #include <QMainWindow>
 #include "Dali/Dali.hpp"
 
@@ -14,6 +15,7 @@ namespace Dali {
 
     private:
       LayoutWidget* m_layout_widget;
+      QLabel* m_size_label;
       QAction* m_open_action;
       QAction* m_refresh_action;
       QAction* m_zoom_in_action;

@@ -1,17 +1,13 @@
-#ifndef DALI_LAYOUTITEM_H
-#define DALI_LAYOUTITEM_H
-#include <QPainter>
+#ifndef DALI_LAYOUT_ITEM_H
+#define DALI_LAYOUT_ITEM_H
 #include <QRect>
+#include <QString>
+#include "Dali/Dali.hpp"
 
 namespace Dali {
 
   class LayoutItem {
     public:
-      enum class SizePolicy {
-        Expanding,
-        Fixed
-      };
-
       LayoutItem() = default;
 
       QRect get_rect() const;
