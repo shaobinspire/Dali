@@ -12,8 +12,8 @@ namespace Dali {
 
       bool parse_json_file(const QString& name);
 
-      double get_scale() const;
-      void set_scale(double scale);
+      //double get_scale() const;
+      //void set_scale(double scale);
 
       QSize get_min_size() const;
       QSize get_max_size() const;

@@ -32,8 +32,18 @@ Layout* parse(const json& json) {
     if(item.contains("name")) {
       box->set_name(QString::fromStdString(item["name"].get<std::string>()));
     }
-    box->set_width_constraint(parse_expression(QString::fromStdString(std::string(item["width"]))));
-    box->set_height_constraint(parse_expression(QString::fromStdString(std::string(item["height"]))));
+    if(item["width"].is_string()) {
+      box->set_width_constraint(
+        parse_expression(QString::fromStdString(std::string(item["width"]))));
+    } else {
+      box->set_size({item["width"], box->get_size().height()});
+    }
+    if(item["height"].is_string()) {
+      box->set_height_constraint(
+        parse_expression(QString::fromStdString(std::string(item["height"]))));
+    } else {
+      box->set_size({box->get_size().width(), item["height"]});
+    }
     box->set_pos({item["x"], item["y"]});
     //box->set_rect({item["x"], item["y"], item["width"], item["height"]});
     if(item.contains("policy")) {
@@ -58,8 +68,8 @@ Layout* parse(const json& json) {
 
 LayoutWidget::LayoutWidget(QWidget *parent)
   : QWidget(parent),
-    m_layout(nullptr),
-    m_scale(1.0) {}
+    m_layout(nullptr)/*,
+    m_scale(1.0)*/ {}
 
 bool LayoutWidget::parse_json_file(const QString& name) {
   auto ifs = std::ifstream(name.toStdString());
@@ -78,17 +88,17 @@ bool LayoutWidget::parse_json_file(const QString& name) {
   return true;
 }
 
-double LayoutWidget::get_scale() const {
-  return m_scale;
-}
+//double LayoutWidget::get_scale() const {
+//  return m_scale;
+//}
 
-void LayoutWidget::set_scale(double scale) {
-  if(!m_layout) {
-    return;
-  }
-  m_scale = scale;
-  //setFixedSize(m_layout->get_rect().size() * m_scale);
-}
+//void LayoutWidget::set_scale(double scale) {
+//  if(!m_layout) {
+//    return;
+//  }
+//  m_scale = scale;
+//  //setFixedSize(m_layout->get_rect().size() * m_scale);
+//}
 
 QSize LayoutWidget::get_min_size() const {
   if(!m_layout) {
@@ -113,7 +123,7 @@ void LayoutWidget::resize(const QSize&) {
 
 void LayoutWidget::paintEvent(QPaintEvent* event) {
   auto painter = QPainter(this);
-  painter.scale(m_scale, m_scale);
+  //painter.scale(m_scale, m_scale);
   if(m_layout) {
     painter.save();
     for(auto i = 0; i < m_layout->get_box_count(); ++i) {

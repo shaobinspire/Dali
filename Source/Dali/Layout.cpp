@@ -8,8 +8,8 @@ using namespace Dali;
 
 Layout::Layout()
   : m_min_size(0, 0),
-    m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX)/*,
-    m_first_fixed_item(-1)*/ {}
+  m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX)/*,
+  m_first_fixed_item(-1)*/ {}
 
 Layout::~Layout() {
   for(auto box : m_boxes) {
@@ -31,6 +31,10 @@ void Layout::add_box(LayoutBox* box) {
   }
   m_boxes.push_back(box);
   m_name_map[box->get_name()] = static_cast<int>(m_boxes.size()) - 1;
+  m_min_pos.setX(std::min(m_min_pos.x(), box->get_rect().x()));
+  m_min_pos.setY(std::min(m_min_pos.y(), box->get_rect().y()));
+  m_max_pos.setX(std::max(m_max_pos.x(), box->get_rect().right()));
+  m_max_pos.setY(std::max(m_max_pos.y(), box->get_rect().bottom()));
 }
 
 int Layout::get_box_count() const {
@@ -59,6 +63,20 @@ void Layout::resize(const QSize& size) {
 }
 
 bool Layout::build() {
+  for(auto i = 0; i < get_box_count(); ++i) {
+    if(m_boxes[i]->get_rect().y() == m_min_pos.y()) {
+      m_top_row.push_back(i);
+    }
+    if(m_boxes[i]->get_rect().x() == m_min_pos.x()) {
+      m_left_column.push_back(i);
+    }
+    if(m_boxes[i]->get_rect().bottom() == m_max_pos.y()) {
+      m_bottom_row.push_back(i);
+    }
+    if(m_boxes[i]->get_rect().right() == m_min_pos.x()) {
+      m_right_column.push_back(i);
+    }
+  }
   calculate_min_max_size();
   if(!build_constraints()) {
     return false;
@@ -108,6 +126,9 @@ void Layout::calculate_min_max_size() {
 }
 
 void Layout::resize_width(int width) {
+  if(m_top_row.size() != get_box_count() && m_left_column.size() != get_box_count()) {
+    return;
+  }
   for(auto index : m_width_sorted_constraint) {
     auto box_width = m_boxes[index]->get_width_constraint().evaluate(
       [&] (auto i) {
@@ -121,12 +142,17 @@ void Layout::resize_width(int width) {
     }
     m_boxes[index]->set_size({static_cast<int>(box_width), m_boxes[index]->get_size().height()});
   }
-  for(auto i = 1; i < get_box_count(); ++i) {
-    m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
+  if(m_top_row.size() == get_box_count()) {
+    for(auto i = 1; i < get_box_count(); ++i) {
+      m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
+    }
   }
 }
 
 void Layout::resize_height(int height) {
+  if(m_top_row.size() != get_box_count() && m_left_column.size() != get_box_count()) {
+    return;
+  }
   for(auto index : m_height_sorted_constraint) {
     auto box_height = m_boxes[index]->get_height_constraint().evaluate(
       [&] (auto i) {
@@ -139,5 +165,10 @@ void Layout::resize_height(int height) {
       box_height = 0;
     }
     m_boxes[index]->set_size({m_boxes[index]->get_size().width(), static_cast<int>(box_height)});
+  }
+  if(m_left_column.size() == get_box_count()) {
+    for(auto i = 1; i < get_box_count(); ++i) {
+      m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
+    }
   }
 }

@@ -11,7 +11,7 @@ namespace Dali {
       MainWindow();
 
     protected:
-      void wheelEvent(QWheelEvent* event) override;
+      //void wheelEvent(QWheelEvent* event) override;
       void resizeEvent(QResizeEvent* event) override;
 
     private:
@@ -19,19 +19,19 @@ namespace Dali {
       QLabel* m_size_label;
       QAction* m_open_action;
       QAction* m_refresh_action;
-      QAction* m_zoom_in_action;
-      QAction* m_zoom_out_action;
-      QAction* m_normal_size_action;
+      //QAction* m_zoom_in_action;
+      //QAction* m_zoom_out_action;
+      //QAction* m_normal_size_action;
       QString m_file_name;
-      double m_scale;
+      //double m_scale;
 
       void create_menu();
       void open();
       void refresh();
-      void zoom_in();
-      void zoom_out();
-      void normal_size();
-      void update_size();
+      //void zoom_in();
+      //void zoom_out();
+      //void normal_size();
+      //void update_size();
   };
 }
 

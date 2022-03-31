@@ -36,9 +36,15 @@ namespace Dali {
       std::unordered_map<QString, int> m_name_map;
       std::vector<int> m_width_sorted_constraint;
       std::vector<int> m_height_sorted_constraint;
+      std::vector<int> m_top_row;
+      std::vector<int> m_left_column;
+      std::vector<int> m_bottom_row;
+      std::vector<int> m_right_column;
       QRect m_rect;
       QSize m_min_size;
       QSize m_max_size;
+      QPoint m_min_pos;
+      QPoint m_max_pos;
 
       bool build_constraints();
       void build_constraint_graph(ConstraintGraph& graph, int box_index,
