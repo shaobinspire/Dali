@@ -18,6 +18,8 @@ namespace Dali {
       QSize get_min_size() const;
       QSize get_max_size() const;
 
+      void resize(const QSize& size);
+
     protected:
       void paintEvent(QPaintEvent* event) override;
 

@@ -12,6 +12,7 @@ namespace Dali {
 
     protected:
       void wheelEvent(QWheelEvent* event) override;
+      void resizeEvent(QResizeEvent* event) override;
 
     private:
       LayoutWidget* m_layout_widget;

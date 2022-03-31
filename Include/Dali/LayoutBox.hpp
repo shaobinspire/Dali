@@ -1,14 +1,15 @@
-#ifndef DALI_LAYOUT_ITEM_H
-#define DALI_LAYOUT_ITEM_H
+#ifndef DALI_LAYOUT_BOX_H
+#define DALI_LAYOUT_BOX_H
 #include <QRect>
 #include <QString>
+#include "Dali/ConstraintExpression.hpp"
 #include "Dali/Dali.hpp"
 
 namespace Dali {
 
-  class LayoutItem {
+  class LayoutBox {
     public:
-      LayoutItem() = default;
+      LayoutBox() = default;
 
       QRect get_rect() const;
       void set_rect(const QRect& rect);
@@ -28,11 +29,20 @@ namespace Dali {
       QString get_name() const;
       void set_name(const QString& name);
 
+      const ConstraintExpression& get_width_constraint() const;
+      ConstraintExpression& get_width_constraint();
+      void set_width_constraint(const ConstraintExpression& constraint);
+      const ConstraintExpression& get_height_constraint() const;
+      ConstraintExpression& get_height_constraint();
+      void set_height_constraint(const ConstraintExpression& constraint);
+
     private:
       QRect m_rect;
       QString m_name;
       SizePolicy m_horizontal_size_policy;
       SizePolicy m_vertical_size_policy;
+      ConstraintExpression m_width_constraint;
+      ConstraintExpression m_height_constraint;
   };
 }
 #endif

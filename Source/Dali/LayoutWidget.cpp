@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QPainter>
-#include "Dali/LayoutItem.hpp"
+#include "Dali/LayoutBox.hpp"
 #include "Dali/Layout.hpp"
 
 using namespace Dali;
@@ -28,27 +28,30 @@ SizePolicy get_size_policy(const std::string& policy) {
 Layout* parse(const json& json) {
   auto layout = new Layout();
   for(auto& item : json) {
-    auto layout_item = new LayoutItem();
+    auto box = new LayoutBox();
     if(item.contains("name")) {
-      layout_item->set_name(QString::fromStdString(item["name"].get<std::string>()));
+      box->set_name(QString::fromStdString(item["name"].get<std::string>()));
     }
-    layout_item->set_rect({item["x"], item["y"], item["width"], item["height"]});
+    box->set_width_constraint(parse_expression(QString::fromStdString(std::string(item["width"]))));
+    box->set_height_constraint(parse_expression(QString::fromStdString(std::string(item["height"]))));
+    box->set_pos({item["x"], item["y"]});
+    //box->set_rect({item["x"], item["y"], item["width"], item["height"]});
     if(item.contains("policy")) {
       auto size_policy = get_size_policy(item["policy"]);
-      layout_item->set_horizontal_size_policy(size_policy);
-      layout_item->set_vertical_size_policy(size_policy);
+      box->set_horizontal_size_policy(size_policy);
+      box->set_vertical_size_policy(size_policy);
     } else {
       if(item.contains("horizontal_policy")) {
-        layout_item->set_horizontal_size_policy(
+        box->set_horizontal_size_policy(
           get_size_policy(item["horizontal_policy"]));
       }
       if(item.contains("vertical_policy")) {
-        layout_item->set_vertical_size_policy(
+        box->set_vertical_size_policy(
           get_size_policy(item["vertical_policy"]));
       }
     }
-    layout->set_rect(layout->get_rect().united(layout_item->get_rect()));
-    layout->add_item(layout_item);
+    layout->set_rect(layout->get_rect().united(box->get_rect()));
+    layout->add_box(box);
   }
   return layout;
 }
@@ -67,8 +70,10 @@ bool LayoutWidget::parse_json_file(const QString& name) {
   }
   m_layout = std::move(std::unique_ptr<Layout>(parse(m_json)));
   if(m_layout) {
-    m_layout->calculate_min_max_size();
-    setFixedSize(m_layout->get_rect().size());
+    if(!m_layout->build()) {
+      return false;
+    }
+    //setFixedSize(m_layout->get_rect().size());
   }
   return true;
 }
@@ -82,7 +87,7 @@ void LayoutWidget::set_scale(double scale) {
     return;
   }
   m_scale = scale;
-  setFixedSize(m_layout->get_rect().size() * m_scale);
+  //setFixedSize(m_layout->get_rect().size() * m_scale);
 }
 
 QSize LayoutWidget::get_min_size() const {
@@ -99,25 +104,32 @@ QSize LayoutWidget::get_max_size() const {
   return m_layout->get_max_size();
 }
 
+void LayoutWidget::resize(const QSize&) {
+  if(m_layout) {
+    m_layout->resize(size());
+    //setFixedSize(m_layout->get_rect().size());
+  }
+}
+
 void LayoutWidget::paintEvent(QPaintEvent* event) {
   auto painter = QPainter(this);
   painter.scale(m_scale, m_scale);
   if(m_layout) {
     painter.save();
-    for(auto i = 0; i < m_layout->get_item_size(); ++i) {
-      auto item = m_layout->get_item(i);
-      auto rect = item->get_rect();
-      if(item->get_horizontal_size_policy() == item->get_vertical_size_policy()) {
-        painter.fillRect(rect, get_color(item->get_horizontal_size_policy()));
+    for(auto i = 0; i < m_layout->get_box_count(); ++i) {
+      auto box = m_layout->get_box(i);
+      auto rect = box->get_rect();
+      if(box->get_horizontal_size_policy() == box->get_vertical_size_policy()) {
+        painter.fillRect(rect, get_color(box->get_horizontal_size_policy()));
       } else {
         auto top_left = rect.topLeft() + QPoint(1, 1);
         auto top_right = rect.topRight() + QPoint(0, 1);
         auto bottom_left = rect.bottomLeft() + QPoint(1, 0);
-        painter.setPen(QPen(QBrush(get_color(item->get_horizontal_size_policy())), 2,
+        painter.setPen(QPen(QBrush(get_color(box->get_horizontal_size_policy())), 2,
           Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
         painter.drawLine(QLineF(top_left, bottom_left));
         painter.drawLine(QLineF(top_right, rect.bottomRight()));
-        painter.setPen(QPen(QBrush(get_color(item->get_vertical_size_policy())), 2,
+        painter.setPen(QPen(QBrush(get_color(box->get_vertical_size_policy())), 2,
           Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin));
         painter.drawLine(QLineF(top_left, top_right));
         painter.drawLine(QLineF(bottom_left, rect.bottomRight()));
@@ -125,7 +137,7 @@ void LayoutWidget::paintEvent(QPaintEvent* event) {
       painter.setPen(Qt::black);
       auto position = QString("\n(%1, %2, %3, %4)").
         arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
-      painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, item->get_name() + position);
+      painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, box->get_name() + position);
     }
     painter.restore();
   }

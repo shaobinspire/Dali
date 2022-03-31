@@ -10,10 +10,10 @@ namespace Dali {
     Fixed
   };
 
-  struct LayoutTree;
-  struct LayoutTreeNode;
+  class ConstraintExpression;
+  class ConstraintGraph;
   class Layout;
-  class LayoutItem;
+  class LayoutBox;
   class LayoutWidget;
 }
 

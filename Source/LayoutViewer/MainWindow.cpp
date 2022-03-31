@@ -43,6 +43,11 @@ void MainWindow::wheelEvent(QWheelEvent* event) {
   QWidget::wheelEvent(event);
 }
 
+void MainWindow::resizeEvent(QResizeEvent* event) {
+  m_layout_widget->resize(event->size());
+  QWidget::resizeEvent(event);
+}
+
 void MainWindow::create_menu() {
   auto file_menu = menuBar()->addMenu(tr("&File"));
   m_open_action = file_menu->addAction(tr("&Open..."), this, &MainWindow::open);
