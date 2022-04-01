@@ -77,10 +77,30 @@ bool Layout::build() {
       m_right_column.push_back(i);
     }
   }
-  calculate_min_max_size();
+  if(m_top_row.size() == get_box_count()) {
+    auto expanding_box_without_constraint = std::map<int, int>();
+    for(auto i = 0; i < get_box_count(); ++i) {
+      if(!m_boxes[i]->get_width_constraint().is_valid() &&
+          m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Expanding) {
+        expanding_box_without_constraint[m_boxes[i]->get_rect().width()] = i;
+      }
+    }
+    for(auto iter = std::next(expanding_box_without_constraint.begin(), 1); iter != expanding_box_without_constraint.end(); ++iter) {
+      auto expression = std::vector<ConstraintExpression::Element>();
+      expression.push_back(ConstraintExpression::Variable{
+        expanding_box_without_constraint.begin()->second,
+        m_boxes[expanding_box_without_constraint.begin()->second]->get_name(),
+          ConstraintExpression::Property::WIDTH});
+      expression.push_back(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
+      expression.push_back(ConstraintExpression::Operator::MULTIPLICATION);
+      m_boxes[iter->second]->set_width_constraint(ConstraintExpression(std::move(expression)));
+    }
+  } else if(m_left_column.size() == get_box_count()) {
+  }
   if(!build_constraints()) {
     return false;
   }
+  calculate_min_max_size();
   return true;
 }
 
@@ -117,6 +137,11 @@ void Layout::build_constraint_graph(ConstraintGraph& graph, int box_index,
 }
 
 void Layout::calculate_min_max_size() {
+  if(m_top_row.size() == get_box_count()) {
+    calculate_one_row_min_max_size();
+  } else if(m_left_column.size() == get_box_count()) {
+    calculate_one_column_min_max_size();
+  }
   //if(preprocess_base_cases()) {
   //  return;
   //}
@@ -125,50 +150,132 @@ void Layout::calculate_min_max_size() {
   //rebuild_layout();
 }
 
+void Layout::calculate_one_row_min_max_size() {
+  for(auto index : m_width_sorted_constraint) {
+    calculate_fixed_box_size(index);
+  }
+  auto fixed_count = 0;
+  for(auto index : m_top_row) {
+    if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+      m_min_size.setWidth(m_min_size.width() + m_boxes[index]->get_rect().width());
+      ++fixed_count;
+    }
+    if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
+      m_min_size.setHeight(m_boxes[index]->get_rect().height());
+    }
+  }
+  if(fixed_count == get_box_count()) {
+    m_max_size.setWidth(m_min_size.width());
+  }
+  if(m_min_size.height() != QWIDGETSIZE_MAX) {
+    m_max_size.setHeight(m_min_size.height());
+  }
+}
+
+void Layout::calculate_one_column_min_max_size() {
+  for(auto index : m_height_sorted_constraint) {
+    calculate_fixed_box_size(index);
+  }
+  auto fixed_count = 0;
+  for(auto index : m_left_column) {
+    if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
+      m_min_size.setHeight(m_min_size.height() + m_boxes[index]->get_rect().height());
+      ++fixed_count;
+    }
+    if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+      m_min_size.setWidth(m_boxes[index]->get_rect().width());
+    }
+  }
+  if(fixed_count == get_box_count()) {
+    m_max_size.setHeight(m_min_size.height());
+  }
+  if(m_min_size.width() != QWIDGETSIZE_MAX) {
+    m_max_size.setWidth(m_min_size.width());
+  }
+}
+
+void Layout::calculate_fixed_box_size(int index) {
+  if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+    if(m_boxes[index]->get_width_constraint().is_valid()) {
+      m_boxes[index]->set_size(
+        {static_cast<int>(evaluate_width_constraint(index, 0)),
+          m_boxes[index]->get_size().height()});
+    }
+  }
+  if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
+    if(m_boxes[index]->get_height_constraint().is_valid()) {
+      m_boxes[index]->set_size({m_boxes[index]->get_size().width(),
+        static_cast<int>(evaluate_height_constraint(index, 0))});
+    }
+  }
+}
+
 void Layout::resize_width(int width) {
-  if(m_top_row.size() != get_box_count() && m_left_column.size() != get_box_count()) {
+  if(m_top_row.size() != get_box_count() &&
+      m_left_column.size() != get_box_count()) {
     return;
   }
   for(auto index : m_width_sorted_constraint) {
-    auto box_width = m_boxes[index]->get_width_constraint().evaluate(
-      [&] (auto i) {
-        return m_boxes[i]->get_rect().width();
-      },
-      [&] {
-        return width;
-      });
-    if(box_width < 0) {
-      box_width = 0;
+    if(!m_boxes[index]->get_width_constraint().is_valid()) {
+      continue;
     }
-    m_boxes[index]->set_size({static_cast<int>(box_width), m_boxes[index]->get_size().height()});
+    m_boxes[index]->set_size(
+      {static_cast<int>(evaluate_width_constraint(index, width)),
+        m_boxes[index]->get_size().height()});
   }
   if(m_top_row.size() == get_box_count()) {
     for(auto i = 1; i < get_box_count(); ++i) {
-      m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
+      if(m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Expanding) {
+
+        m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
+      }
     }
   }
 }
 
 void Layout::resize_height(int height) {
-  if(m_top_row.size() != get_box_count() && m_left_column.size() != get_box_count()) {
+  if(m_top_row.size() != get_box_count() &&
+      m_left_column.size() != get_box_count()) {
     return;
   }
   for(auto index : m_height_sorted_constraint) {
-    auto box_height = m_boxes[index]->get_height_constraint().evaluate(
-      [&] (auto i) {
-        return m_boxes[i]->get_rect().height();
-      },
-      [&] {
-        return height;
-      });
-    if(box_height < 0) {
-      box_height = 0;
+    if(!m_boxes[index]->get_height_constraint().is_valid()) {
+      continue;
     }
-    m_boxes[index]->set_size({m_boxes[index]->get_size().width(), static_cast<int>(box_height)});
+    m_boxes[index]->set_size({m_boxes[index]->get_size().width(),
+      static_cast<int>(evaluate_height_constraint(index, height))});
   }
   if(m_left_column.size() == get_box_count()) {
     for(auto i = 1; i < get_box_count(); ++i) {
       m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
     }
   }
+}
+
+double Layout::evaluate_width_constraint(int index, int width) {
+  auto result = m_boxes[index]->get_width_constraint().evaluate(
+    [&] (auto i) {
+      return m_boxes[i]->get_rect().width();
+    },
+    [&] {
+      return width;
+    });
+  if(result < 0) {
+    result = 0;
+  }
+  return result;
+}
+
+double Layout::evaluate_height_constraint(int index, int height) {
+  auto result = m_boxes[index]->get_height_constraint().evaluate(
+    [&] (auto i) {
+      return m_boxes[i]->get_rect().height();
+    },
+    [&] {
+      return height;
+    });
+  if(result < 0) {
+    result = 0;
+  }
+  return result;
 }

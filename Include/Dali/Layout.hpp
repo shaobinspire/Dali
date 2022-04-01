@@ -50,8 +50,13 @@ namespace Dali {
       void build_constraint_graph(ConstraintGraph& graph, int box_index,
         ConstraintExpression& constraint_expression);
       void calculate_min_max_size();
+      void calculate_one_row_min_max_size();
+      void calculate_one_column_min_max_size();
+      void calculate_fixed_box_size(int index);
       void resize_width(int width);
       void resize_height(int height);
+      double evaluate_width_constraint(int index, int width);
+      double evaluate_height_constraint(int index, int height);
   };
 }
 

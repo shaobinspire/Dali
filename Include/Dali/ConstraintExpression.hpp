@@ -30,14 +30,21 @@ namespace Dali {
 
       using Element = std::variant<double, Operator, Variable>;
 
+      ConstraintExpression() = default;
+      explicit ConstraintExpression(std::vector<Element> expression);
+
       double evaluate(const std::function<int (int index)>& get_box_size,
         const std::function<int ()>& get_layout_size);
+
+      //std::map<int, double> get_coefficient();
 
       int get_element_count() const;
 
       const Element& get_element(int index) const;
 
       Element& get_element(int index);
+
+      bool is_valid();
 
     private:
       std::vector<Element> m_expression;

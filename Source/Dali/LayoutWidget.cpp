@@ -32,20 +32,15 @@ Layout* parse(const json& json) {
     if(item.contains("name")) {
       box->set_name(QString::fromStdString(item["name"].get<std::string>()));
     }
-    if(item["width"].is_string()) {
+    box->set_rect({item["x"], item["y"], item["width"], item["height"]});
+    if(item.contains("width_constraint")) {
       box->set_width_constraint(
-        parse_expression(QString::fromStdString(std::string(item["width"]))));
-    } else {
-      box->set_size({item["width"], box->get_size().height()});
+        parse_expression(QString::fromStdString(std::string(item["width_constraint"]))));
     }
-    if(item["height"].is_string()) {
+    if(item.contains("height_constraint")) {
       box->set_height_constraint(
-        parse_expression(QString::fromStdString(std::string(item["height"]))));
-    } else {
-      box->set_size({box->get_size().width(), item["height"]});
+        parse_expression(QString::fromStdString(std::string(item["height_constraint"]))));
     }
-    box->set_pos({item["x"], item["y"]});
-    //box->set_rect({item["x"], item["y"], item["width"], item["height"]});
     if(item.contains("policy")) {
       auto size_policy = get_size_policy(item["policy"]);
       box->set_horizontal_size_policy(size_policy);
@@ -83,7 +78,8 @@ bool LayoutWidget::parse_json_file(const QString& name) {
     if(!m_layout->build()) {
       return false;
     }
-    //setFixedSize(m_layout->get_rect().size());
+    setMinimumSize(m_layout->get_min_size());
+    setMaximumSize(m_layout->get_max_size());
   }
   return true;
 }

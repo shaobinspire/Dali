@@ -43,7 +43,7 @@ auto evaluate(ConstraintExpression::Operator o, double a, double b) {
   } else if(o == ConstraintExpression::Operator::DIVISION) {
     return b / a;
   }
-  return a;
+  return 0.0;
 }
 
 int get_precedence(const QString& op) {
@@ -66,7 +66,10 @@ std::vector<ExpressionToken> split(const QString& expression) {
       break;
     } else {
       if(k - index > 0) {
-        list.push_back({expression.mid(index, k - index).trimmed(), false});
+        auto token = expression.mid(index, k - index).trimmed();
+        if(!token.isEmpty()) {
+          list.push_back({std::move(token), false});
+        }
       }
       list.push_back({expression.mid(k, 1), true});
       index = k + 1;
@@ -93,6 +96,9 @@ ConstraintExpression::Element parse_element(const QString& term) {
   return element;
 }
 
+ConstraintExpression::ConstraintExpression(std::vector<Element> expression)
+  : m_expression(std::move(expression)) {}
+
 double ConstraintExpression::evaluate(
     const std::function<int (int index)>& get_box_size,
     const std::function<int ()>& get_layout_size) {
@@ -118,6 +124,67 @@ double ConstraintExpression::evaluate(
   return stack.top();
 }
 
+//std::map<int, double> ConstraintExpression::get_coefficient() {
+//  auto coefficient = std::map<int, double>();
+//  coefficient[-1] = evaluate(
+//    [] (auto i) { return 0; },
+//    [] { return 0; });
+//  auto variables = std::vector<Variable>();
+//  for(auto& element : m_expression) {
+//    if(std::holds_alternative<Variable>(element)) {
+//      variables.push_back(std::get<Variable>(element));
+//    }
+//  }
+//  for(auto& v : variables) {
+//    auto index = v.m_index;
+//    auto stack = std::stack<std::tuple<double, bool>>();
+//    for(auto& element : m_expression) {
+//      std::visit(overloaded{
+//        [&](double number) { stack.push({number, true}); },
+//        [&] (const Variable& variable) {
+//          if(variable.m_index == index) {
+//            stack.push({1, false});
+//          } else {
+//            stack.push({0, false});
+//          }
+//        },
+//        [&] (const Operator o) {
+//          auto a = stack.top();
+//          stack.pop();
+//          auto b = stack.top();
+//          stack.pop();
+//          auto value = [&] () -> std::tuple<double, bool> {
+//            if(o == ConstraintExpression::Operator::ADDITION) {
+//              if(std::get<1>(a) && std::get<1>(b)) {
+//                return {0.0, true};
+//              } else if(std::get<1>(a) && !std::get<1>(b)) {
+//                return b;
+//              } else if(!std::get<1>(a) && std::get<1>(b)) {
+//                return a;
+//              }
+//              return {std::get<0>(a) + std::get<0>(b), false};
+//            } else if(o == ConstraintExpression::Operator::SUBTRACTION) {
+//              if(std::get<1>(a) && std::get<1>(b)) {
+//                return {0.0, true};
+//              } else if(std::get<1>(a) && !std::get<1>(b)) {
+//                return b;
+//              } else if(!std::get<1>(a) && std::get<1>(b)) {
+//                return {-std::get<0>(a), true};
+//              }
+//              return {std::get<0>(a) + std::get<0>(b), false};
+//            } else if(o == ConstraintExpression::Operator::MULTIPLICATION) {
+//              return {std::get<0>(a) * std::get<0>(b), false};
+//            } else if(o == ConstraintExpression::Operator::DIVISION) {
+//              return {std::get<0>(b) / std::get<0>(a), false};
+//            }
+//          }();
+//          //stack.push(::evaluate(o, a, b));
+//        }}, element);
+//    }
+//  }
+//  return coefficient;
+//}
+
 int ConstraintExpression::get_element_count() const {
   return static_cast<int>(m_expression.size());
 }
@@ -134,6 +201,10 @@ ConstraintExpression::Element& ConstraintExpression::get_element(int index) {
     throw std::out_of_range("The index is out of range.");
   }
   return m_expression[index];
+}
+
+bool ConstraintExpression::is_valid() {
+  return get_element_count() > 0;
 }
 
 ConstraintExpression Dali::parse_expression(const QString& expression) {
@@ -158,6 +229,18 @@ ConstraintExpression Dali::parse_expression(const QString& expression) {
           get_precedence(token.m_token) <= get_precedence(operator_stack.top().m_token)) {
         constraint_express.m_expression.push_back(to_operator(operator_stack.top().m_token));
         operator_stack.pop();
+        //auto o = to_operator(operator_stack.top().m_token);
+        //operator_stack.pop();
+        //auto a = constraint_express.m_expression.rbegin();
+        //auto b = constraint_express.m_expression.rbegin() + 1;
+        //if(std::holds_alternative<double>(*a) && std::holds_alternative<double>(*b)) {
+        //  auto value = ::evaluate(o, std::get<double>(*a), std::get<double>(*b));
+        //  constraint_express.m_expression.pop_back();
+        //  constraint_express.m_expression.pop_back();
+        //  constraint_express.m_expression.push_back(value);
+        //} else {
+        //  constraint_express.m_expression.push_back(o);
+        //}
       }
       operator_stack.push(token);
     }
