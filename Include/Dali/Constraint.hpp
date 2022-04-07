@@ -43,7 +43,7 @@ namespace Dali {
 
       explicit Constraint(QString expression);
 
-      z3::expr get_formula(z3::context& context) const;
+      z3::expr convert_to_formula(z3::context& context) const;
 
       const std::unordered_set<QString>& get_variable_names() const;
 

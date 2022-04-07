@@ -32,6 +32,7 @@ MainWindow::MainWindow() {
   resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
   move((availableGeometry.width() - width()) / 2,
     (availableGeometry.height() - height()) / 2);
+  setMinimumSize(0, 0);
 }
 
 //void MainWindow::wheelEvent(QWheelEvent* event) {

@@ -249,20 +249,20 @@ Constraint::Constraint(QString expression)
   parse();
 }
 
-expr Constraint::get_formula(context& context) const {
+expr Constraint::convert_to_formula(context& context) const {
   if(m_lhs_elements.empty() || m_rhs_elements.empty()) {
     return expr(context);
   }
   if(m_comparison_operator == ComparisonOperator::EQUAL_TO) {
-    return ::get_formula(context, m_lhs_elements) == ::get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) == get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::LESS_THAN) {
-    return ::get_formula(context, m_lhs_elements) < ::get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) < get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::LESS_THAN_OR_EQUAL_TO) {
-    return ::get_formula(context, m_lhs_elements) <= ::get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) <= get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::GREATER_THAN) {
-    return ::get_formula(context, m_lhs_elements) > ::get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) > get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::GREATER_THAN_OR_EQUAL_TO) {
-    return ::get_formula(context, m_lhs_elements) >= ::get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) >= get_formula(context, m_rhs_elements);
   }
   return expr(context);
 }

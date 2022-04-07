@@ -8,6 +8,7 @@
 #include "Dali/Constraint.hpp"
 #include "Dali/Constraints.hpp"
 #include "Dali/Dali.hpp"
+#include "Dali/Solver.hpp"
 
 namespace Dali {
 
@@ -51,21 +52,13 @@ namespace Dali {
       QSize m_max_size;
       QPoint m_min_pos;
       QPoint m_max_pos;
-      std::vector<Constraint> m_initial_width_constraints;
-      std::unordered_set<QString> m_initial_width_variable_names;
-      std::vector<Constraint> m_initial_height_constraints;
-      std::vector<Constraint> m_additional_width_constraints;
-      std::unordered_set<QString> m_additional_width_variable_names;
-      std::vector<Constraint> m_additional_height_constraints;
       Constraints m_width_constraints;
       Constraints m_height_constraints;
-      int m_fixed_size;
-      std::vector<QString> m_expanding_boxes;
+      Solver m_width_solver;
+      Solver m_height_solver;
 
       bool is_horizontal_one_row() const;
       bool is_vertical_one_column() const;
-      bool build_global_constraints();
-      void build_constraint_graph(ConstraintGraph& graph, Constraint& constraint);
       void calculate_min_max_size();
       void calculate_one_row_min_max_size();
       void calculate_one_column_min_max_size();

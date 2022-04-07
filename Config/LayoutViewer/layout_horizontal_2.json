@@ -26,6 +26,6 @@
     }
   ],
   "constraints": [
-    "C.width = B.width"
+    "A.width = width / 2"
   ]
 }
