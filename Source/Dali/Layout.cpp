@@ -8,7 +8,9 @@ using namespace Dali;
 
 Layout::Layout()
   : m_min_size(0, 0),
-  m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX)/*,
+  m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX),
+  m_fixed_size(0)
+  /*,
   m_first_fixed_item(-1)*/ {}
 
 Layout::~Layout() {
@@ -37,6 +39,20 @@ void Layout::add_box(LayoutBox* box) {
   m_max_pos.setY(std::max(m_max_pos.y(), box->get_rect().bottom()));
 }
 
+void Layout::add_width_constraint(const Constraint& constraint) {
+  m_additional_width_constraints.push_back(constraint);
+  auto& variable_names = constraint.get_variable_names();
+  for(auto& name : variable_names) {
+    m_additional_width_variable_names.insert(name);
+  }
+  //m_width_constraints.add(constraint);
+}
+
+void Layout::add_height_constraint(const Constraint& constraint) {
+  m_additional_height_constraints.push_back(constraint);
+  //m_height_constraints.add(constraint);
+}
+
 int Layout::get_box_count() const {
   return static_cast<int>(m_boxes.size());
 }
@@ -63,6 +79,8 @@ void Layout::resize(const QSize& size) {
 }
 
 bool Layout::build() {
+  //auto horizontal_expanding_boxes = std::vector<QString>();
+  //auto vertical_expanding_boxes = std::vector<QString>();
   for(auto i = 0; i < get_box_count(); ++i) {
     if(m_boxes[i]->get_rect().y() == m_min_pos.y()) {
       m_top_row.push_back(i);
@@ -77,69 +95,124 @@ bool Layout::build() {
       m_right_column.push_back(i);
     }
   }
-  if(m_top_row.size() == get_box_count()) {
+  if(is_horizontal_one_row()) {
     auto expanding_box_without_constraint = std::map<int, int>();
     for(auto i = 0; i < get_box_count(); ++i) {
-      if(!m_boxes[i]->get_width_constraint().is_valid() &&
-          m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Expanding) {
+      m_expanding_boxes.push_back(m_boxes[i]->get_name());
+      if(m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+        //m_fixed_size += m_boxes[i]->get_rect().width();
+        auto expression = QString("%1.%2 = %3").
+          arg(m_boxes[i]->get_name()).arg("width").
+          arg(m_boxes[i]->get_rect().width());
+        m_initial_width_constraints.push_back(Constraint(expression));
+        //m_width_constraints.add(Constraint(expression));
+      } else {
+        //m_expanding_boxes.push_back(m_boxes[i]->get_name());
         expanding_box_without_constraint[m_boxes[i]->get_rect().width()] = i;
       }
     }
     for(auto iter = std::next(expanding_box_without_constraint.begin(), 1); iter != expanding_box_without_constraint.end(); ++iter) {
-      auto expression = std::vector<ConstraintExpression::Element>();
-      expression.push_back(ConstraintExpression::Variable{
-        expanding_box_without_constraint.begin()->second,
-        m_boxes[expanding_box_without_constraint.begin()->second]->get_name(),
-          ConstraintExpression::Property::WIDTH});
-      expression.push_back(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
-      expression.push_back(ConstraintExpression::Operator::MULTIPLICATION);
-      m_boxes[iter->second]->set_width_constraint(ConstraintExpression(std::move(expression)));
+      auto expression = QString("%1.%2 = %3.%2 * %4").
+        arg(m_boxes[iter->second]->get_name()).arg("width").
+        arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
+        arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
+      m_initial_width_constraints.push_back(Constraint(expression));
+      //m_width_constraints.add(Constraint(expression));
     }
-  } else if(m_left_column.size() == get_box_count()) {
-  }
-  if(!build_constraints()) {
-    return false;
-  }
-  calculate_min_max_size();
-  return true;
-}
-
-bool Layout::build_constraints() {
-  ConstraintGraph width_constraint_graph(m_boxes.size());
-  ConstraintGraph height_constraint_graph(m_boxes.size());
-  for(auto i = 0; i < get_box_count(); ++i) {
-    build_constraint_graph(width_constraint_graph, i,
-      m_boxes[i]->get_width_constraint());
-    build_constraint_graph(height_constraint_graph, i,
-      m_boxes[i]->get_height_constraint());
-  }
-  if(!width_constraint_graph.topological_sort() ||
-      !height_constraint_graph.topological_sort()) {
-    return false;
-  }
-  m_width_sorted_constraint = width_constraint_graph.get_sorted_list();
-  m_height_sorted_constraint = height_constraint_graph.get_sorted_list();
-  return true;
-}
-
-void Layout::build_constraint_graph(ConstraintGraph& graph, int box_index,
-    ConstraintExpression& constraint_expression) {
-  for(auto i = 0; i < constraint_expression.get_element_count(); ++i) {
-    auto& element = constraint_expression.get_element(i);
-    if(auto variable = std::get_if<ConstraintExpression::Variable>(&element)) {
-      if(m_name_map.contains(variable->m_name)) {
-        auto index = m_name_map[variable->m_name];
-        variable->m_index = index;
-        graph.add_edge(box_index, index);
+    auto constraints = std::vector<Constraint>(m_additional_width_constraints.begin(), m_additional_width_constraints.end());
+    for(auto& constraint : m_initial_width_constraints) {
+      auto& variable_names = constraint.get_variable_names();
+      auto is_contained = [&] {
+        for(auto& name : variable_names) {
+          if(m_additional_width_variable_names.contains(name)) {
+            return true;
+          }
+        }
+        return false;
+      }();
+      if(!is_contained) {
+        constraints.push_back(constraint);
       }
     }
+    for(auto& constraint : constraints) {
+      m_width_constraints.add(constraint);
+    }
+  } else if(is_vertical_one_column()) {
+    auto expanding_box_without_constraint = std::map<int, int>();
+    for(auto i = 0; i < get_box_count(); ++i) {
+      if(m_boxes[i]->get_vertical_size_policy() == SizePolicy::Fixed) {
+        m_fixed_size += m_boxes[i]->get_rect().height();
+      } else {
+        m_expanding_boxes.push_back(m_boxes[i]->get_name());
+        expanding_box_without_constraint[m_boxes[i]->get_rect().height()] = i;
+      }
+    }
+    for(auto iter = std::next(expanding_box_without_constraint.begin(), 1); iter != expanding_box_without_constraint.end(); ++iter) {
+      auto expression = QString("%1.%2 = %3.%2 * %4").
+        arg(m_boxes[iter->second]->get_name()).arg("height").
+        arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
+        arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
+      m_width_constraints.add(Constraint(expression));
+    }
   }
+  calculate_min_max_size();
+  //if(is_horizontal_one_row()) {
+  //  m_width_constraints.add_sum_constraint("width", horizontal_expanding_boxes);
+  //} else if(is_vertical_one_column()) {
+  //  m_height_constraints.add_sum_constraint("height", vertical_expanding_boxes);
+  //}
+
+  return true;
+}
+
+bool Layout::build_global_constraints() {
+  //ConstraintGraph width_constraint_graph(m_boxes.size());
+  //ConstraintGraph height_constraint_graph(m_boxes.size());
+  //auto constraints = m_width_constraints.get_constraints();
+  //for(auto& constraint : constraints) {
+  //  build_constraint_graph(width_constraint_graph, constraint);
+  //  build_constraint_graph(height_constraint_graph, constraint);
+  //}
+  //if(!width_constraint_graph.topological_sort() ||
+  //    !height_constraint_graph.topological_sort()) {
+  //  return false;
+  //}
+  //m_width_sorted_constraint = width_constraint_graph.get_sorted_list();
+  //m_height_sorted_constraint = height_constraint_graph.get_sorted_list();
+  return true;
+}
+
+void Layout::build_constraint_graph(ConstraintGraph& graph, Constraint& constraint) {
+  //for(auto i = 0; i < constraint.get_element_count(); ++i) {
+  //  auto& element = constraint.get_element(i);
+  //  if(auto variable = std::get_if<Constraint::Variable>(&element)) {
+  //    if(m_name_map.contains(variable->m_name)) {
+  //      auto index = m_name_map[variable->m_name];
+  //      graph.add_edge(box_index, index);
+  //    }
+  //  }
+  //}
+}
+
+int Layout::get_index_by_name(const QString& name) {
+  if(auto iter = m_name_map.find(name); iter != m_name_map.end()) {
+    return iter->second;
+  }
+  return -1;
+}
+
+bool Layout::is_horizontal_one_row() const {
+  return m_top_row.size() == get_box_count();
+}
+
+bool Layout::is_vertical_one_column() const {
+  return m_left_column.size() == get_box_count();
 }
 
 void Layout::calculate_min_max_size() {
-  if(m_top_row.size() == get_box_count()) {
+  if(is_horizontal_one_row()) {
     calculate_one_row_min_max_size();
-  } else if(m_left_column.size() == get_box_count()) {
+  } else if(is_vertical_one_column()) {
     calculate_one_column_min_max_size();
   }
   //if(preprocess_base_cases()) {
@@ -151,9 +224,6 @@ void Layout::calculate_min_max_size() {
 }
 
 void Layout::calculate_one_row_min_max_size() {
-  for(auto index : m_width_sorted_constraint) {
-    calculate_fixed_box_size(index);
-  }
   auto fixed_count = 0;
   for(auto index : m_top_row) {
     if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
@@ -173,9 +243,6 @@ void Layout::calculate_one_row_min_max_size() {
 }
 
 void Layout::calculate_one_column_min_max_size() {
-  for(auto index : m_height_sorted_constraint) {
-    calculate_fixed_box_size(index);
-  }
   auto fixed_count = 0;
   for(auto index : m_left_column) {
     if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
@@ -194,88 +261,34 @@ void Layout::calculate_one_column_min_max_size() {
   }
 }
 
-void Layout::calculate_fixed_box_size(int index) {
-  if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-    if(m_boxes[index]->get_width_constraint().is_valid()) {
-      m_boxes[index]->set_size(
-        {static_cast<int>(evaluate_width_constraint(index, 0)),
-          m_boxes[index]->get_size().height()});
-    }
-  }
-  if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
-    if(m_boxes[index]->get_height_constraint().is_valid()) {
-      m_boxes[index]->set_size({m_boxes[index]->get_size().width(),
-        static_cast<int>(evaluate_height_constraint(index, 0))});
-    }
-  }
-}
-
 void Layout::resize_width(int width) {
-  if(m_top_row.size() != get_box_count() &&
-      m_left_column.size() != get_box_count()) {
-    return;
-  }
-  for(auto index : m_width_sorted_constraint) {
-    if(!m_boxes[index]->get_width_constraint().is_valid()) {
-      continue;
+  if(is_horizontal_one_row()) {
+    if(width - m_fixed_size <= 0) {
+      return;
     }
-    m_boxes[index]->set_size(
-      {static_cast<int>(evaluate_width_constraint(index, width)),
-        m_boxes[index]->get_size().height()});
-  }
-  if(m_top_row.size() == get_box_count()) {
+    auto result = m_width_constraints.solve(width/* - m_fixed_size*/, m_expanding_boxes);
+    for(auto& pos : result) {
+      auto index = m_name_map[pos.first];
+      m_boxes[index]->set_size({static_cast<int>(pos.second), m_boxes[index]->get_rect().height()});
+    }
     for(auto i = 1; i < get_box_count(); ++i) {
-      if(m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Expanding) {
-
-        m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
-      }
+      m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
     }
   }
 }
 
 void Layout::resize_height(int height) {
-  if(m_top_row.size() != get_box_count() &&
-      m_left_column.size() != get_box_count()) {
-    return;
-  }
-  for(auto index : m_height_sorted_constraint) {
-    if(!m_boxes[index]->get_height_constraint().is_valid()) {
-      continue;
+  if(is_vertical_one_column()) {
+    if(height - m_fixed_size <= 0) {
+      return;
     }
-    m_boxes[index]->set_size({m_boxes[index]->get_size().width(),
-      static_cast<int>(evaluate_height_constraint(index, height))});
-  }
-  if(m_left_column.size() == get_box_count()) {
+    auto result = m_width_constraints.solve(height - m_fixed_size, m_expanding_boxes);
+    for(auto& pos : result) {
+      auto index = m_name_map[pos.first];
+      m_boxes[index]->set_size({m_boxes[index]->get_rect().width(), static_cast<int>(pos.second)});
+    }
     for(auto i = 1; i < get_box_count(); ++i) {
       m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
     }
   }
-}
-
-double Layout::evaluate_width_constraint(int index, int width) {
-  auto result = m_boxes[index]->get_width_constraint().evaluate(
-    [&] (auto i) {
-      return m_boxes[i]->get_rect().width();
-    },
-    [&] {
-      return width;
-    });
-  if(result < 0) {
-    result = 0;
-  }
-  return result;
-}
-
-double Layout::evaluate_height_constraint(int index, int height) {
-  auto result = m_boxes[index]->get_height_constraint().evaluate(
-    [&] (auto i) {
-      return m_boxes[i]->get_rect().height();
-    },
-    [&] {
-      return height;
-    });
-  if(result < 0) {
-    result = 0;
-  }
-  return result;
 }

@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QPainter>
+#include "Dali/Constraint.hpp"
 #include "Dali/LayoutBox.hpp"
 #include "Dali/Layout.hpp"
 
@@ -27,20 +28,12 @@ SizePolicy get_size_policy(const std::string& policy) {
 
 Layout* parse(const json& json) {
   auto layout = new Layout();
-  for(auto& item : json) {
+  for(auto& item : json["layout"]) {
     auto box = new LayoutBox();
     if(item.contains("name")) {
       box->set_name(QString::fromStdString(item["name"].get<std::string>()));
     }
     box->set_rect({item["x"], item["y"], item["width"], item["height"]});
-    if(item.contains("width_constraint")) {
-      box->set_width_constraint(
-        parse_expression(QString::fromStdString(std::string(item["width_constraint"]))));
-    }
-    if(item.contains("height_constraint")) {
-      box->set_height_constraint(
-        parse_expression(QString::fromStdString(std::string(item["height_constraint"]))));
-    }
     if(item.contains("policy")) {
       auto size_policy = get_size_policy(item["policy"]);
       box->set_horizontal_size_policy(size_policy);
@@ -57,6 +50,16 @@ Layout* parse(const json& json) {
     }
     layout->set_rect(layout->get_rect().united(box->get_rect()));
     layout->add_box(box);
+  }
+  if(json.contains("constraints")) {
+    for(auto& expression : json["constraints"]) {
+      auto constraint = Constraint(QString::fromStdString(expression.get<std::string>()));
+      if(constraint.is_width_related()) {
+        layout->add_width_constraint(std::move(constraint));
+      } else {
+        layout->add_height_constraint(std::move(constraint));
+      }
+    }
   }
   return layout;
 }

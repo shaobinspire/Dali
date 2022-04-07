@@ -2,7 +2,6 @@
 #define DALI_LAYOUT_BOX_H
 #include <QRect>
 #include <QString>
-#include "Dali/ConstraintExpression.hpp"
 #include "Dali/Dali.hpp"
 
 namespace Dali {
@@ -29,20 +28,20 @@ namespace Dali {
       QString get_name() const;
       void set_name(const QString& name);
 
-      const ConstraintExpression& get_width_constraint() const;
-      ConstraintExpression& get_width_constraint();
-      void set_width_constraint(const ConstraintExpression& constraint);
-      const ConstraintExpression& get_height_constraint() const;
-      ConstraintExpression& get_height_constraint();
-      void set_height_constraint(const ConstraintExpression& constraint);
+      //const Constraint& get_width_constraints() const;
+      //Constraint& get_width_constraints();
+      //void set_width_constraints(const Constraint& constraint);
+      //const Constraint& get_height_constraints() const;
+      //Constraint& get_height_constraints();
+      //void set_height_constraints(const Constraint& constraint);
 
     private:
       QRect m_rect;
       QString m_name;
       SizePolicy m_horizontal_size_policy;
       SizePolicy m_vertical_size_policy;
-      ConstraintExpression m_width_constraint;
-      ConstraintExpression m_height_constraint;
+      //Constraint m_width_constraints;
+      //Constraint m_height_constraints;
   };
 }
 #endif

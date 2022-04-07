@@ -1,10 +1,12 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
 #include <set>
-#include <unordered_set>
+#include <map>
 #include <vector>
+#include <QString>
 #include <QRect>
-#include "Dali/ConstraintExpression.hpp"
+#include "Dali/Constraint.hpp"
+#include "Dali/Constraints.hpp"
 #include "Dali/Dali.hpp"
 
 namespace Dali {
@@ -19,6 +21,8 @@ namespace Dali {
       void set_rect(const QRect& rect);
 
       void add_box(LayoutBox* box);
+      void add_width_constraint(const Constraint& constraint);
+      void add_height_constraint(const Constraint& constraint);
 
       int get_box_count() const;
 
@@ -31,9 +35,11 @@ namespace Dali {
 
       bool build();
 
+      int get_index_by_name(const QString& name);
+
     private:
       std::vector<LayoutBox*> m_boxes;
-      std::unordered_map<QString, int> m_name_map;
+      std::map<QString, int> m_name_map;
       std::vector<int> m_width_sorted_constraint;
       std::vector<int> m_height_sorted_constraint;
       std::vector<int> m_top_row;
@@ -45,18 +51,27 @@ namespace Dali {
       QSize m_max_size;
       QPoint m_min_pos;
       QPoint m_max_pos;
+      std::vector<Constraint> m_initial_width_constraints;
+      std::unordered_set<QString> m_initial_width_variable_names;
+      std::vector<Constraint> m_initial_height_constraints;
+      std::vector<Constraint> m_additional_width_constraints;
+      std::unordered_set<QString> m_additional_width_variable_names;
+      std::vector<Constraint> m_additional_height_constraints;
+      Constraints m_width_constraints;
+      Constraints m_height_constraints;
+      int m_fixed_size;
+      std::vector<QString> m_expanding_boxes;
 
-      bool build_constraints();
-      void build_constraint_graph(ConstraintGraph& graph, int box_index,
-        ConstraintExpression& constraint_expression);
+      bool is_horizontal_one_row() const;
+      bool is_vertical_one_column() const;
+      bool build_global_constraints();
+      void build_constraint_graph(ConstraintGraph& graph, Constraint& constraint);
       void calculate_min_max_size();
       void calculate_one_row_min_max_size();
       void calculate_one_column_min_max_size();
-      void calculate_fixed_box_size(int index);
+      //void calculate_fixed_box_size(int index);
       void resize_width(int width);
       void resize_height(int height);
-      double evaluate_width_constraint(int index, int width);
-      double evaluate_height_constraint(int index, int height);
   };
 }
 

@@ -1,5 +1,8 @@
 set(DALI_INCLUDE_PATH "${CMAKE_CURRENT_LIST_DIR}/../Include")
 set(DALI_SOURCE_PATH "${CMAKE_CURRENT_LIST_DIR}/../Source")
+set(Z3_INCLUDE_PATH "${PROJECT_BINARY_DIR}/third_party/z3/src/api")
+set(Z3_LIBRARY_DEBUG_PATH "${PROJECT_BINARY_DIR}/third_party/z3/build_lib/Debug/libz3.lib")
+set(Z3_LIBRARY_OPTIMIZED_PATH "${PROJECT_BINARY_DIR}/third_party/z3/build_lib/Release/libz3.lib")
 set(QT_ROOT "${PROJECT_BINARY_DIR}/third_party/qt-5.15.2")
 set(QT_INCLUDE_PATH "${QT_ROOT}/qtbase/include")
 set(QT_CORE_INCLUDE_PATH "${QT_INCLUDE_PATH}/QtCore")

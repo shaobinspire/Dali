@@ -32,9 +32,9 @@ SET PATH=%PATH%;%cd%\Strawberry\perl\site\bin;%cd%\Strawberry\perl\bin;%cd%\Stra
 IF NOT EXIST qt-5.15.2 (
   git clone git://code.qt.io/qt/qt5.git qt-5.15.2
   IF %ERRORLEVEL% EQU 0 (
-	PUSHD qt-5.15.2
+    PUSHD qt-5.15.2
     git checkout 5.15.2
-	perl init-repository --module-subset=default
+    perl init-repository --module-subset=default
     CALL configure -opensource -static -mp -make libs -make tools ^
       -nomake examples -nomake tests -opengl desktop -no-icu -qt-freetype ^
       -qt-harfbuzz -qt-libpng -qt-pcre -qt-zlib -confirm-license
@@ -49,6 +49,16 @@ IF NOT EXIST qt-5.15.2 (
   )
 )
 
+IF NOT EXIST w3 (
+  git clone git@github.com:Z3Prover/z3.git z3 
+  IF %ERRORLEVEL% EQU 0 (
+    PUSHD z3 
+    POPD
+  ) ELSE (
+    RD /S /Q z3 
+    SET EXIT_STATUS=1
+  )
+)
 
 POPD
 ENDLOCAL

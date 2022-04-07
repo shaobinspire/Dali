@@ -50,26 +50,26 @@ void LayoutBox::set_name(const QString& name) {
   m_name = name;
 }
 
-const ConstraintExpression& LayoutBox::get_width_constraint() const {
-  return m_width_constraint;
-}
-
-ConstraintExpression& Dali::LayoutBox::get_width_constraint() {
-  return m_width_constraint;
-}
-
-void LayoutBox::set_width_constraint(const ConstraintExpression& constraint) {
-  m_width_constraint = constraint;
-}
-
-const ConstraintExpression& LayoutBox::get_height_constraint() const {
-  return m_height_constraint;
-}
-
-ConstraintExpression& Dali::LayoutBox::get_height_constraint() {
-  return m_height_constraint;
-}
-
-void LayoutBox::set_height_constraint(const ConstraintExpression& constraint) {
-  m_height_constraint = constraint;
-}
+//const Constraint& LayoutBox::get_width_constraints() const {
+//  return m_width_constraints;
+//}
+//
+//Constraint& Dali::LayoutBox::get_width_constraints() {
+//  return m_width_constraints;
+//}
+//
+//void LayoutBox::set_width_constraints(const Constraint& constraints) {
+//  m_width_constraints = constraints;
+//}
+//
+//const Constraint& LayoutBox::get_height_constraints() const {
+//  return m_height_constraints;
+//}
+//
+//Constraint& Dali::LayoutBox::get_height_constraints() {
+//  return m_height_constraints;
+//}
+//
+//void LayoutBox::set_height_constraints(const Constraint& constraints) {
+//  m_height_constraints = constraints;
+//}

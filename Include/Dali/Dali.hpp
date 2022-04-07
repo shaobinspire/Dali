@@ -10,7 +10,6 @@ namespace Dali {
     Fixed
   };
 
-  class ConstraintExpression;
   class ConstraintGraph;
   class Layout;
   class LayoutBox;

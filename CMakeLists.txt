@@ -23,6 +23,7 @@ include_directories(SYSTEM ${QT_CORE_INCLUDE_PATH})
 include_directories(SYSTEM ${QT_GUI_INCLUDE_PATH})
 include_directories(SYSTEM ${QT_WIDGETS_INCLUDE_PATH})
 include_directories(SYSTEM ${JSON_INCLUDE_PATH})
+include_directories(SYSTEM ${Z3_INCLUDE_PATH})
 include_directories(${PROJECT_BINARY_DIR})
 
 set(Qt5Widgets_DIR "${QT_ROOT}/qtbase/lib/cmake/Qt5Widgets")
