@@ -135,9 +135,9 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
       },
       [&] (const Constraint::Variable& variable) {
         if(variable.m_name.isEmpty()) {
-          stack.push(context.int_const(layout_name));
+          stack.push(context.real_const(layout_name));
         } else {
-          stack.push(context.int_const(variable.m_name.toStdString().c_str()));
+          stack.push(context.real_const(variable.m_name.toStdString().c_str()));
         }
       },
       [&] (const Constraint::Operator o) {

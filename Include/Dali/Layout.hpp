@@ -1,9 +1,9 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
+#include <QString>
 #include <set>
 #include <map>
 #include <vector>
-#include <QString>
 #include <QRect>
 #include "Dali/Constraint.hpp"
 #include "Dali/Constraints.hpp"
@@ -40,7 +40,7 @@ namespace Dali {
 
     private:
       std::vector<LayoutBox*> m_boxes;
-      std::map<QString, int> m_name_map;
+      std::unordered_map<QString, int> m_name_map;
       std::vector<int> m_width_sorted_constraint;
       std::vector<int> m_height_sorted_constraint;
       std::vector<int> m_top_row;
@@ -59,10 +59,8 @@ namespace Dali {
 
       bool is_horizontal_one_row() const;
       bool is_vertical_one_column() const;
-      void calculate_min_max_size();
       void calculate_one_row_min_max_size();
       void calculate_one_column_min_max_size();
-      //void calculate_fixed_box_size(int index);
       void resize_width(int width);
       void resize_height(int height);
   };

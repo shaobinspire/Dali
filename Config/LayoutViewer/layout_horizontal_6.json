@@ -1,0 +1,48 @@
+{
+  "layout": [
+    {
+      "name": "A",
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 200,
+      "policy": "expanding"
+    },
+    {
+      "name": "B",
+      "x": 100,
+      "y": 0,
+      "width": 100,
+      "height": 200,
+      "policy": "fixed"
+    },
+    {
+      "name": "C",
+      "x": 200,
+      "y": 0,
+      "width": 100,
+      "height": 200,
+      "policy": "expanding"
+    },
+    {
+      "name": "D",
+      "x": 300,
+      "y": 0,
+      "width": 200,
+      "height": 200,
+      "policy": "fixed"
+    },
+    {
+      "name": "E",
+      "x": 500,
+      "y": 0,
+      "width": 200,
+      "height": 200,
+      "policy": "expanding"
+    }
+  ],
+  "constraints": [
+    "A.width = B.width * 2",
+    "E.width = A.width + C.width"
+  ]
+}

@@ -1,13 +1,51 @@
 #include "Dali/Layout.hpp"
-#include <stack>
 #include <QWidget>
 #include "Dali/LayoutBox.hpp"
 
 using namespace Dali;
 
+void build_constraints(const std::vector<LayoutBox*>& boxes, const QString& property,
+    Constraints& constraints) {
+  auto get_value = [=] (auto index) {
+    if(property == "width") {
+      return boxes[index]->get_rect().width();
+    } else {
+      return boxes[index]->get_rect().height();
+    }
+  };
+  auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
+  auto sum_expression = QString();
+  for(auto i = 0; i < static_cast<int>(boxes.size()); ++i) {
+    sum_expression += boxes[i]->get_name() + "." + property + " +";
+    if(boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+      auto expression = QString("%1.%2 = %3").
+        arg(boxes[i]->get_name()).arg(property).
+        arg(get_value(i));
+      constraints.add_local_constraint(Constraint(expression), true);
+    } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
+      expanding_box_without_constraint.push_back({get_value(i), i});
+    }
+    auto expression = QString("%1.%2 >= 0").arg(boxes[i]->get_name()).arg(property);
+    constraints.add_local_constraint(Constraint(expression), true);
+  }
+  if(!expanding_box_without_constraint.empty()) {
+    std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
+    for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
+      auto expression = QString("%1.%2 = %3.%2 * %4").
+        arg(boxes[iter->second]->get_name()).arg(property).
+        arg(boxes[expanding_box_without_constraint.begin()->second]->get_name()).
+        arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
+      constraints.add_local_constraint(Constraint(expression), false);
+    }
+  }
+  sum_expression.chop(1);
+  sum_expression += "= width";
+  constraints.add_local_constraint(Constraint(sum_expression), true);
+}
+
 Layout::Layout()
   : m_min_size(0, 0),
-  m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX) {}
+    m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX) {}
 
 Layout::~Layout() {
   for(auto box : m_boxes) {
@@ -67,8 +105,33 @@ QSize Layout::get_max_size() const {
 }
 
 void Layout::resize(const QSize& size) {
-  resize_width(size.width());
-  resize_height(size.height());
+  if(is_horizontal_one_row()) {
+    auto result = m_width_solver.solve(size.width());
+    for(auto& pos : result) {
+      if(!m_name_map.contains(pos.first)) {
+        continue;
+      }
+      auto index = m_name_map[pos.first];
+      m_boxes[index]->set_size({static_cast<int>(pos.second), size.height()});
+    }
+    for(auto i = 1; i < get_box_count(); ++i) {
+      m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
+    }
+  } else if(is_vertical_one_column()) {
+    auto result = m_height_solver.solve(size.height());
+    for(auto& pos : result) {
+      if(!m_name_map.contains(pos.first)) {
+        continue;
+      }
+      auto index = m_name_map[pos.first];
+      m_boxes[index]->set_size({size.width(), static_cast<int>(pos.second)});
+    }
+    for(auto i = 1; i < get_box_count(); ++i) {
+      m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
+    }
+  }
+  //resize_width(size.width());
+  //resize_height(size.height());
   m_rect.setSize(size);
 }
 
@@ -88,60 +151,14 @@ bool Layout::build() {
     }
   }
   if(is_horizontal_one_row()) {
-    auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
-    auto sum_expression = QString();
-    for(auto i = 0; i < get_box_count(); ++i) {
-      sum_expression += m_boxes[i]->get_name() + ".width +";
-      if(m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-        auto expression = QString("%1.%2 = %3").
-          arg(m_boxes[i]->get_name()).arg("width").
-          arg(m_boxes[i]->get_rect().width());
-        m_width_constraints.add_local_constraint(Constraint(expression));
-      } else if(!m_width_constraints.has_varaible_name_in_global(m_boxes[i]->get_name())) {
-        expanding_box_without_constraint.push_back({m_boxes[i]->get_rect().width(), i});
-      }
-      auto expression = QString("%1.%2 >= 0").arg(m_boxes[i]->get_name()).arg("width");
-      m_width_constraints.add_local_constraint(Constraint(expression));
-    }
-    if(!expanding_box_without_constraint.empty()) {
-      std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
-      for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
-        auto expression = QString("%1.%2 = %3.%2 * %4").
-          arg(m_boxes[iter->second]->get_name()).arg("width").
-          arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
-          arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
-        m_width_constraints.add_local_constraint(Constraint(expression));
-      }
-    }
-    sum_expression.chop(1);
-    sum_expression += "= width";
-    m_width_constraints.add_global_constraint(Constraint(sum_expression));
+    build_constraints(m_boxes, "width", m_width_constraints);
     m_width_solver.add_constraints(m_width_constraints);
+    calculate_one_row_min_max_size();
   } else if(is_vertical_one_column()) {
-    //auto expanding_box_without_constraint = std::map<int, int>();
-    //for(auto i = 0; i < get_box_count(); ++i) {
-    //  if(m_boxes[i]->get_vertical_size_policy() == SizePolicy::Fixed) {
-    //    m_fixed_size += m_boxes[i]->get_rect().height();
-    //  } else {
-    //    m_expanding_boxes.push_back(m_boxes[i]->get_name());
-    //    expanding_box_without_constraint[m_boxes[i]->get_rect().height()] = i;
-    //  }
-    //}
-    //for(auto iter = std::next(expanding_box_without_constraint.begin(), 1); iter != expanding_box_without_constraint.end(); ++iter) {
-    //  auto expression = QString("%1.%2 = %3.%2 * %4").
-    //    arg(m_boxes[iter->second]->get_name()).arg("height").
-    //    arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
-    //    arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
-    //  m_width_constraints.add(Constraint(expression));
-    //}
+    build_constraints(m_boxes, "height", m_height_constraints);
+    m_height_solver.add_constraints(m_height_constraints);
+    calculate_one_column_min_max_size();
   }
-  calculate_min_max_size();
-  //if(is_horizontal_one_row()) {
-  //  m_width_constraints.add_sum_constraint("width", horizontal_expanding_boxes);
-  //} else if(is_vertical_one_column()) {
-  //  m_height_constraints.add_sum_constraint("height", vertical_expanding_boxes);
-  //}
-
   return true;
 }
 
@@ -160,81 +177,49 @@ bool Layout::is_vertical_one_column() const {
   return m_left_column.size() == get_box_count();
 }
 
-void Layout::calculate_min_max_size() {
-  if(is_horizontal_one_row()) {
-    calculate_one_row_min_max_size();
-  } else if(is_vertical_one_column()) {
-    calculate_one_column_min_max_size();
-  }
-  //if(preprocess_base_cases()) {
-  //  return;
-  //}
-  //build_graph();
-  //get_paths();
-  //rebuild_layout();
-}
-
 void Layout::calculate_one_row_min_max_size() {
-  auto min_width = m_width_solver.get_min_value();
+  m_min_size.setWidth(m_width_solver.get_min_value());
   auto min_height = 0;
-  auto fixed_count = 0;
   for(auto index : m_top_row) {
-    if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-      ++fixed_count;
-    }
     if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
       min_height = m_boxes[index]->get_rect().height();
     }
   }
-  m_min_size = {min_width, min_height};
-  if(fixed_count == get_box_count()) {
+  m_min_size.setHeight(min_height);
+  auto max_width = m_width_solver.get_max_value();
+  if(max_width == -1) {
     m_max_size.setWidth(m_min_size.width());
+  } else {
+    m_max_size.setWidth(max_width);
   }
   if(m_min_size.height() != 0) {
     m_max_size.setHeight(m_min_size.height());
   }
-  
-  //auto fixed_count = 0;
-  //for(auto index : m_top_row) {
-  //  if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-  //    m_min_size.setWidth(m_min_size.width() + m_boxes[index]->get_rect().width());
-  //    ++fixed_count;
-  //  }
-  //  if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
-  //    m_min_size.setHeight(m_boxes[index]->get_rect().height());
-  //  }
-  //}
-  //if(fixed_count == get_box_count()) {
-  //  m_max_size.setWidth(m_min_size.width());
-  //}
-  //if(m_min_size.height() != QWIDGETSIZE_MAX) {
-  //  m_max_size.setHeight(m_min_size.height());
-  //}
 }
 
 void Layout::calculate_one_column_min_max_size() {
-  auto fixed_count = 0;
+  m_min_size.setHeight(m_height_solver.get_min_value());
+  auto min_width = 0;
   for(auto index : m_left_column) {
-    if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
-      m_min_size.setHeight(m_min_size.height() + m_boxes[index]->get_rect().height());
-      ++fixed_count;
-    }
     if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-      m_min_size.setWidth(m_boxes[index]->get_rect().width());
+      min_width = m_boxes[index]->get_rect().width();
     }
   }
-  if(fixed_count == get_box_count()) {
-    m_max_size.setHeight(m_min_size.height());
+  m_min_size.setWidth(min_width);
+  auto max_height = m_width_solver.get_max_value();
+  if(max_height == -1) {
+    m_max_size.setHeight(m_min_size.width());
+  } else {
+    m_max_size.setHeight(max_height);
   }
-  if(m_min_size.width() != QWIDGETSIZE_MAX) {
+  if(m_min_size.width() != 0) {
     m_max_size.setWidth(m_min_size.width());
   }
 }
 
 void Layout::resize_width(int width) {
   if(is_horizontal_one_row()) {
-    //auto result = m_width_constraints.solve(width/* - m_fixed_size*/, m_expanding_boxes);
-    auto result = m_width_solver.solve(/* - m_fixed_size*/width);
+    auto result = m_width_solver.solve(width);
     for(auto& pos : result) {
       if(!m_name_map.contains(pos.first)) {
         continue;
@@ -250,19 +235,17 @@ void Layout::resize_width(int width) {
 
 void Layout::resize_height(int height) {
   if(is_vertical_one_column()) {
-    //auto result = m_width_constraints.solve(height - m_fixed_size, m_expanding_boxes);
     auto result = m_height_solver.solve(height);
     for(auto& pos : result) {
+      if(!m_name_map.contains(pos.first)) {
+        continue;
+      }
       auto index = m_name_map[pos.first];
       m_boxes[index]->set_size({m_boxes[index]->get_rect().width(), static_cast<int>(pos.second)});
     }
     for(auto i = 1; i < get_box_count(); ++i) {
       m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
     }
-  } else {
-    for(auto i = 0; i < get_box_count(); ++i) {
-      m_boxes[i]->set_size({m_boxes[i]->get_rect().width(), height});
-    }
-
   }
 }
+

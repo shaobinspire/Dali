@@ -2,12 +2,15 @@
 
 using namespace Dali;
 
-void Constraints::add_local_constraint(const Constraint& constraint) {
+void Constraints::add_local_constraint(const Constraint& constraint, bool forced) {
+  if(forced) {
+    m_constraints.push_back(constraint);
+    return;
+  }
   auto& variable_names = constraint.get_variable_names();
   auto is_contained = [&] {
     for(auto& name : variable_names) {
-      if(m_global_variable_name.contains(name) &&
-          constraint.get_comparsion_operator() == Constraint::ComparisonOperator::EQUAL_TO) {
+      if(m_global_variable_name.contains(name)) {
         return true;
       }
     }

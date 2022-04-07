@@ -1,5 +1,6 @@
 #ifndef DALI_CONSTRAINTS_H
 #define DALI_CONSTRAINTS_H
+#include <unordered_set>
 #include "Dali/Constraint.hpp"
 #include "Dali/Dali.hpp"
 
@@ -7,7 +8,7 @@ namespace Dali {
 
   class Constraints {
     public:
-      void add_local_constraint(const Constraint& constraint);
+      void add_local_constraint(const Constraint& constraint, bool forced);
       void add_global_constraint(const Constraint& constraint);
       int get_constraint_count() const;
       const Constraint& get_constraint(int index) const;

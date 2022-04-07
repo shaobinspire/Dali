@@ -15,6 +15,7 @@ namespace Dali {
       std::vector<std::pair<QString, double>> solve(int value);
 
       int get_min_value();
+      int get_max_value();
 
     private:
       z3::context m_context;
