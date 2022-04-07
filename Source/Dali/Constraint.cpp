@@ -222,9 +222,15 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
   auto stack = std::stack<expr>();
   for(auto& element : elements) {
     std::visit(overloaded{
-      [&](double number) { stack.push(context.real_val(std::to_string(number).c_str())); },
+      [&](double number) {
+        stack.push(context.real_val(std::to_string(number).c_str()));
+      },
       [&] (const Constraint::Variable& variable) {
-        stack.push(context.int_const(variable.m_name.toStdString().c_str()));
+        if(variable.m_name.isEmpty()) {
+          stack.push(context.int_const("layout"));
+        } else {
+          stack.push(context.int_const(variable.m_name.toStdString().c_str()));
+        }
       },
       [&] (const Constraint::Operator o) {
         auto a = stack.top();
@@ -247,7 +253,18 @@ expr Constraint::get_formula(context& context) const {
   if(m_lhs_elements.empty() || m_rhs_elements.empty()) {
     return expr(context);
   }
-  return ::get_formula(context, m_lhs_elements) == ::get_formula(context, m_rhs_elements);
+  if(m_comparison_operator == ComparisonOperator::EQUAL_TO) {
+    return ::get_formula(context, m_lhs_elements) == ::get_formula(context, m_rhs_elements);
+  } else if(m_comparison_operator == ComparisonOperator::LESS_THAN) {
+    return ::get_formula(context, m_lhs_elements) < ::get_formula(context, m_rhs_elements);
+  } else if(m_comparison_operator == ComparisonOperator::LESS_THAN_OR_EQUAL_TO) {
+    return ::get_formula(context, m_lhs_elements) <= ::get_formula(context, m_rhs_elements);
+  } else if(m_comparison_operator == ComparisonOperator::GREATER_THAN) {
+    return ::get_formula(context, m_lhs_elements) > ::get_formula(context, m_rhs_elements);
+  } else if(m_comparison_operator == ComparisonOperator::GREATER_THAN_OR_EQUAL_TO) {
+    return ::get_formula(context, m_lhs_elements) >= ::get_formula(context, m_rhs_elements);
+  }
+  return expr(context);
 }
 
 const std::unordered_set<QString>& Constraint::get_variable_names() const {
@@ -256,6 +273,10 @@ const std::unordered_set<QString>& Constraint::get_variable_names() const {
 
 bool Constraint::is_width_related() const {
   return m_is_width_related;
+}
+
+Constraint::ComparisonOperator Constraint::get_comparsion_operator() const {
+  return m_comparison_operator;
 }
 
 //int Constraint::get_element_count() const {
@@ -323,11 +344,32 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const QString& expre
 }
 
 void Constraint::parse() {
-  auto list = m_expression.split("=");
-  if(list.size() == 2) {
-    m_lhs_elements = convert_to_rpn(list[0]);
-    m_rhs_elements = convert_to_rpn(list[1]);
+  auto regexp = QRegExp("(=|>|<|>=|<=)");
+  auto pos = m_expression.indexOf(regexp);
+  if(pos == -1) {
+    return;
   }
+  auto match = regexp.cap();
+  if(match == "=") {
+    m_comparison_operator = ComparisonOperator::EQUAL_TO;
+  } else if(match == "<") {
+    m_comparison_operator = ComparisonOperator::LESS_THAN;
+  } else if(match == "<=") {
+    m_comparison_operator = ComparisonOperator::LESS_THAN_OR_EQUAL_TO;
+  } else if(match == ">") {
+    m_comparison_operator = ComparisonOperator::GREATER_THAN;
+  } else if(match == ">=") {
+    m_comparison_operator = ComparisonOperator::GREATER_THAN_OR_EQUAL_TO;
+  } else {
+    m_comparison_operator = ComparisonOperator::NONE;
+  }
+  m_lhs_elements = convert_to_rpn(m_expression.mid(0, pos));
+  m_rhs_elements = convert_to_rpn(m_expression.mid(pos + regexp.matchedLength()));
+  //auto list = m_expression.split(QRegExp("="));
+  //if(list.size() == 2) {
+    //m_lhs_elements = convert_to_rpn(list[0]);
+    //m_rhs_elements = convert_to_rpn(list[1]);
+  //}
 }
 
 //const expr Constraint::get_express() const {

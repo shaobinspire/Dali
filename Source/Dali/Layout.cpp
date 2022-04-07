@@ -96,7 +96,7 @@ bool Layout::build() {
     }
   }
   if(is_horizontal_one_row()) {
-    auto expanding_box_without_constraint = std::map<int, int>();
+    auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
     for(auto i = 0; i < get_box_count(); ++i) {
       m_expanding_boxes.push_back(m_boxes[i]->get_name());
       if(m_boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
@@ -108,10 +108,13 @@ bool Layout::build() {
         //m_width_constraints.add(Constraint(expression));
       } else {
         //m_expanding_boxes.push_back(m_boxes[i]->get_name());
-        expanding_box_without_constraint[m_boxes[i]->get_rect().width()] = i;
+        expanding_box_without_constraint.push_back({m_boxes[i]->get_rect().width(), i});
       }
+      auto expression2 = QString("%1.%2 >= 0").arg(m_boxes[i]->get_name()).arg("width");
+      m_initial_width_constraints.push_back(Constraint(expression2));
     }
-    for(auto iter = std::next(expanding_box_without_constraint.begin(), 1); iter != expanding_box_without_constraint.end(); ++iter) {
+    std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
+    for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
       auto expression = QString("%1.%2 = %3.%2 * %4").
         arg(m_boxes[iter->second]->get_name()).arg("width").
         arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
@@ -124,7 +127,7 @@ bool Layout::build() {
       auto& variable_names = constraint.get_variable_names();
       auto is_contained = [&] {
         for(auto& name : variable_names) {
-          if(m_additional_width_variable_names.contains(name)) {
+          if(m_additional_width_variable_names.contains(name) && constraint.get_comparsion_operator() == Constraint::ComparisonOperator::EQUAL_TO) {
             return true;
           }
         }
@@ -137,6 +140,7 @@ bool Layout::build() {
     for(auto& constraint : constraints) {
       m_width_constraints.add(constraint);
     }
+    m_width_constraints.add(m_expanding_boxes);
   } else if(is_vertical_one_column()) {
     auto expanding_box_without_constraint = std::map<int, int>();
     for(auto i = 0; i < get_box_count(); ++i) {
@@ -224,22 +228,41 @@ void Layout::calculate_min_max_size() {
 }
 
 void Layout::calculate_one_row_min_max_size() {
+  auto min_width = m_width_constraints.get_min_value();
+  auto min_height = 0;
   auto fixed_count = 0;
   for(auto index : m_top_row) {
     if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-      m_min_size.setWidth(m_min_size.width() + m_boxes[index]->get_rect().width());
       ++fixed_count;
     }
     if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
-      m_min_size.setHeight(m_boxes[index]->get_rect().height());
+      min_height = m_boxes[index]->get_rect().height();
     }
   }
+  m_min_size = {min_width, min_height};
   if(fixed_count == get_box_count()) {
     m_max_size.setWidth(m_min_size.width());
   }
-  if(m_min_size.height() != QWIDGETSIZE_MAX) {
+  if(m_min_size.height() != 0) {
     m_max_size.setHeight(m_min_size.height());
   }
+  
+  //auto fixed_count = 0;
+  //for(auto index : m_top_row) {
+  //  if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+  //    m_min_size.setWidth(m_min_size.width() + m_boxes[index]->get_rect().width());
+  //    ++fixed_count;
+  //  }
+  //  if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
+  //    m_min_size.setHeight(m_boxes[index]->get_rect().height());
+  //  }
+  //}
+  //if(fixed_count == get_box_count()) {
+  //  m_max_size.setWidth(m_min_size.width());
+  //}
+  //if(m_min_size.height() != QWIDGETSIZE_MAX) {
+  //  m_max_size.setHeight(m_min_size.height());
+  //}
 }
 
 void Layout::calculate_one_column_min_max_size() {
@@ -266,8 +289,12 @@ void Layout::resize_width(int width) {
     if(width - m_fixed_size <= 0) {
       return;
     }
-    auto result = m_width_constraints.solve(width/* - m_fixed_size*/, m_expanding_boxes);
+    //auto result = m_width_constraints.solve(width/* - m_fixed_size*/, m_expanding_boxes);
+    auto result = m_width_constraints.solve(/* - m_fixed_size*/width);
     for(auto& pos : result) {
+      if(!m_name_map.contains(pos.first)) {
+        continue;
+      }
       auto index = m_name_map[pos.first];
       m_boxes[index]->set_size({static_cast<int>(pos.second), m_boxes[index]->get_rect().height()});
     }
@@ -282,7 +309,8 @@ void Layout::resize_height(int height) {
     if(height - m_fixed_size <= 0) {
       return;
     }
-    auto result = m_width_constraints.solve(height - m_fixed_size, m_expanding_boxes);
+    //auto result = m_width_constraints.solve(height - m_fixed_size, m_expanding_boxes);
+    auto result = m_width_constraints.solve(height);
     for(auto& pos : result) {
       auto index = m_name_map[pos.first];
       m_boxes[index]->set_size({m_boxes[index]->get_rect().width(), static_cast<int>(pos.second)});
@@ -290,5 +318,10 @@ void Layout::resize_height(int height) {
     for(auto i = 1; i < get_box_count(); ++i) {
       m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
     }
+  } else {
+    for(auto i = 0; i < get_box_count(); ++i) {
+      m_boxes[i]->set_size({m_boxes[i]->get_rect().width(), height});
+    }
+
   }
 }

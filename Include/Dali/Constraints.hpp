@@ -11,10 +11,12 @@ namespace Dali {
 
       Constraints();
       void add(const Constraint& constraint);
-      std::vector<std::pair<QString, double>> solve(int value, const std::vector<QString>& boxes);
+      void add(const std::vector<QString>& boxes);
+      //void set(const QString& name, int value);
+      std::vector<std::pair<QString, double>> solve(int value);
       //bool contains(const QString& variable_name);
       const std::vector<Constraint>& get_constraints() const;
-
+      int get_min_value();
     private:
       std::vector<Constraint> m_constraints;
       z3::context m_context;
