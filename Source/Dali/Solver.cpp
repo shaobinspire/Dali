@@ -16,7 +16,7 @@ void Solver::add_constraints(const Constraints& constraints) {
 
 std::vector<std::pair<QString, double>> Solver::solve(int value) {
   m_solver.push();
-  m_solver.add(m_context.int_const("layout") == m_context.real_val(std::to_string(value).c_str()));
+  m_solver.add(m_context.int_const(layout_name) == m_context.real_val(std::to_string(value).c_str()));
   auto status = m_solver.check();
   if(status != check_result::sat) {
     m_solver.pop();

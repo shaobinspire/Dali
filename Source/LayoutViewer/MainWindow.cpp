@@ -35,15 +35,6 @@ MainWindow::MainWindow() {
   setMinimumSize(0, 0);
 }
 
-//void MainWindow::wheelEvent(QWheelEvent* event) {
-//  if(event->angleDelta().y() > 0) {
-//    zoom_in();
-//  } else {
-//    zoom_out();
-//  }
-//  QWidget::wheelEvent(event);
-//}
-
 void MainWindow::resizeEvent(QResizeEvent* event) {
   m_layout_widget->resize(event->size());
   QWidget::resizeEvent(event);
@@ -57,19 +48,6 @@ void MainWindow::create_menu() {
     file_menu->addAction(tr("&Refresh"), this, &MainWindow::refresh);
   m_refresh_action->setShortcuts(QKeySequence::Refresh);
   m_refresh_action->setEnabled(false);
-  //auto view_menu = menuBar()->addMenu(tr("&View"));
-  //m_zoom_in_action =
-  //  view_menu->addAction(tr("Zoom &In"), this, &MainWindow::zoom_in);
-  //m_zoom_in_action->setShortcut(QKeySequence::ZoomIn);
-  //m_zoom_in_action->setEnabled(false);
-  //m_zoom_out_action =
-  //  view_menu->addAction(tr("Zoom &Out"), this, &MainWindow::zoom_out);
-  //m_zoom_out_action->setShortcut(QKeySequence::ZoomOut);
-  //m_zoom_out_action->setEnabled(false);
-  //m_normal_size_action =
-  //  view_menu->addAction(tr("&Normal Size"), this, &MainWindow::normal_size);
-  //m_normal_size_action->setShortcut(tr("Ctrl+S"));
-  //m_normal_size_action->setEnabled(false);
 }
 
 void MainWindow::open() {
@@ -91,9 +69,6 @@ void MainWindow::refresh() {
   } else {
     m_refresh_action->setEnabled(true);
     m_layout_widget->resize(size());
-    //normal_size();
-    //centralWidget()->adjustSize();
-    //adjustSize();
     statusBar()->showMessage(m_file_name.split("/").back());
     auto min_size = m_layout_widget->get_min_size();
     auto max_size = m_layout_widget->get_max_size();
@@ -101,33 +76,3 @@ void MainWindow::refresh() {
       arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
   }
 }
-
-//void MainWindow::zoom_in() {
-//  if(m_scale < MAX_SCALE_FACTOR) {
-//    m_scale += SCALE_FACTOR_STEP;
-//  }
-//  update_size();
-//}
-//
-//void MainWindow::zoom_out() {
-//  if(m_scale > MIN_SCALE_FACTOR) {
-//    m_scale -= SCALE_FACTOR_STEP;
-//  }
-//  update_size();
-//}
-//
-//void MainWindow::normal_size() {
-//  m_scale = 1.0;
-//  update_size();
-//}
-//
-//void MainWindow::update_size() {
-//  if(m_scale != m_layout_widget->get_scale()) {
-//    m_layout_widget->set_scale(m_scale);
-//    centralWidget()->adjustSize();
-//    adjustSize();
-//  }
-//  m_zoom_in_action->setEnabled(m_scale < MAX_SCALE_FACTOR);
-//  m_zoom_out_action->setEnabled(m_scale > MIN_SCALE_FACTOR);
-//  m_normal_size_action->setEnabled(true);
-//}

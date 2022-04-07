@@ -51,20 +51,6 @@ namespace Dali {
 
       ComparisonOperator get_comparsion_operator() const;
 
-      //void build_linear_equation(const std::vector<Element>& expression);
-
-      //double evaluate(const std::function<int (int index)>& get_box_size,
-      //  const std::function<int ()>& get_layout_size);
-
-      //int get_element_count() const;
-
-      //const Element& get_element(int index) const;
-
-      //Element& get_element(int index);
-
-      //bool is_valid();
-      //z3::expr get_express(std::unordered_map<QString, int>&);
-
     private:
       QString m_expression;
       std::vector<Element> m_lhs_elements;
@@ -75,16 +61,7 @@ namespace Dali {
 
       void parse();
       std::vector<Constraint::Element> convert_to_rpn(const QString& expression);
-      //void convert_to_rpn();
-      //z3::expr m_expression;
-    //  std::unordered_map<QString, std::vector<Variable>> m_variables;
-      //std::vector<Element> m_constraints;
-      //double evaluate(const std::vector<Element>& expression, double value);
   };
-
-  //using Constraint = std::unordered_map<QString, Variable>;
-  //Constraint parse_constraint_expression(const QString& expression);
-  //ConstraintExpression parse_constraints(const std::vector<>& constrains);
 }
 
 #endif

@@ -5,6 +5,8 @@
 #endif
 
 namespace Dali {
+  const auto layout_name = "layout";
+
   enum class SizePolicy {
     Expanding,
     Fixed

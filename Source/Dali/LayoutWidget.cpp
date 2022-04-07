@@ -146,7 +146,11 @@ void LayoutWidget::paintEvent(QPaintEvent* event) {
       painter.setPen(Qt::black);
       auto position = QString("\n(%1, %2, %3, %4)").
         arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
-      painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, box->get_name() + position);
+      auto name = QString();
+      if(box->is_name_visible()) {
+        name = box->get_name();
+      }
+      painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, name + position);
     }
     painter.restore();
   }

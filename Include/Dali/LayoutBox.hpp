@@ -8,7 +8,7 @@ namespace Dali {
 
   class LayoutBox {
     public:
-      LayoutBox() = default;
+      LayoutBox();
 
       QRect get_rect() const;
       void set_rect(const QRect& rect);
@@ -28,20 +28,15 @@ namespace Dali {
       QString get_name() const;
       void set_name(const QString& name);
 
-      //const Constraint& get_width_constraints() const;
-      //Constraint& get_width_constraints();
-      //void set_width_constraints(const Constraint& constraint);
-      //const Constraint& get_height_constraints() const;
-      //Constraint& get_height_constraints();
-      //void set_height_constraints(const Constraint& constraint);
+      bool is_name_visible() const;
+      void set_name_visible(bool is_visible);
 
     private:
       QRect m_rect;
       QString m_name;
       SizePolicy m_horizontal_size_policy;
       SizePolicy m_vertical_size_policy;
-      //Constraint m_width_constraints;
-      //Constraint m_height_constraints;
+      bool m_is_name_visible;
   };
 }
 #endif

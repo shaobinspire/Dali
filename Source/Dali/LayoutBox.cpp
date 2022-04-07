@@ -2,6 +2,9 @@
 
 using namespace Dali;
 
+LayoutBox::LayoutBox()
+  : m_is_name_visible(true) {}
+
 QRect LayoutBox::get_rect() const {
   return m_rect;
 }
@@ -48,6 +51,14 @@ QString LayoutBox::get_name() const {
 
 void LayoutBox::set_name(const QString& name) {
   m_name = name;
+}
+
+bool LayoutBox::is_name_visible() const {
+  return m_is_name_visible;
+}
+
+void LayoutBox::set_name_visible(bool is_visible) {
+  m_is_name_visible = is_visible;
 }
 
 //const Constraint& LayoutBox::get_width_constraints() const {

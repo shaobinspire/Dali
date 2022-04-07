@@ -27,6 +27,10 @@ void Layout::add_box(LayoutBox* box) {
   if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
     m_rect = m_rect.united(box->get_rect());
   }
+  if(box->get_name().isEmpty()) {
+    box->set_name(QString("BOX%1").arg(m_boxes.size()));
+    box->set_name_visible(false);
+  }
   m_boxes.push_back(box);
   m_name_map[box->get_name()] = static_cast<int>(m_boxes.size()) - 1;
   m_min_pos.setX(std::min(m_min_pos.x(), box->get_rect().x()));
@@ -99,13 +103,15 @@ bool Layout::build() {
       auto expression = QString("%1.%2 >= 0").arg(m_boxes[i]->get_name()).arg("width");
       m_width_constraints.add_local_constraint(Constraint(expression));
     }
-    std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
-    for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
-      auto expression = QString("%1.%2 = %3.%2 * %4").
-        arg(m_boxes[iter->second]->get_name()).arg("width").
-        arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
-        arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
-      m_width_constraints.add_local_constraint(Constraint(expression));
+    if(!expanding_box_without_constraint.empty()) {
+      std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
+      for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
+        auto expression = QString("%1.%2 = %3.%2 * %4").
+          arg(m_boxes[iter->second]->get_name()).arg("width").
+          arg(m_boxes[expanding_box_without_constraint.begin()->second]->get_name()).
+          arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
+        m_width_constraints.add_local_constraint(Constraint(expression));
+      }
     }
     sum_expression.chop(1);
     sum_expression += "= width";
