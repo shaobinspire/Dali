@@ -1,7 +1,7 @@
 #ifndef DALI_CONSTRAINT_H
 #define DALI_CONSTRAINT_H
 #include <c++/z3++.h>
-#include <unordered_set>
+#include <set>
 #include <variant>
 #include <QString>
 #include "Dali/Dali.hpp"
@@ -45,7 +45,7 @@ namespace Dali {
 
       z3::expr convert_to_formula(z3::context& context) const;
 
-      const std::unordered_set<QString>& get_variable_names() const;
+      const std::set<QString>& get_variable_names() const;
 
       bool is_width_related() const;
 
@@ -55,7 +55,7 @@ namespace Dali {
       QString m_expression;
       std::vector<Element> m_lhs_elements;
       std::vector<Element> m_rhs_elements;
-      std::unordered_set<QString> m_variable_names;
+      std::set<QString> m_variable_names;
       bool m_is_width_related;
       ComparisonOperator m_comparison_operator;
 

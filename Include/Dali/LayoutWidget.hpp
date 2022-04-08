@@ -12,13 +12,10 @@ namespace Dali {
 
       bool parse_json_file(const QString& name);
 
-      //double get_scale() const;
-      //void set_scale(double scale);
-
       QSize get_min_size() const;
       QSize get_max_size() const;
 
-      void resize(const QSize& size);
+      void update_size(const QSize& size);
 
     protected:
       void paintEvent(QPaintEvent* event) override;

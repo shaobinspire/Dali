@@ -175,7 +175,7 @@ expr Constraint::convert_to_formula(context& context) const {
   return expr(context);
 }
 
-const std::unordered_set<QString>& Constraint::get_variable_names() const {
+const std::set<QString>& Constraint::get_variable_names() const {
   return m_variable_names;
 }
 

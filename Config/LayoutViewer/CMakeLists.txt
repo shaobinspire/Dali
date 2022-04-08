@@ -10,6 +10,8 @@ endif(WIN32)
 add_executable(LayoutViewer ${app_type} ${header_files} ${source_files})
 # set_source_files_properties(${header_files} PROPERTIES HEADER_FILE_ONLY TRUE)
 target_link_libraries(LayoutViewer Library Resources
+  debug ${Z3_LIBRARY_DEBUG_PATH}
+  optimized ${Z3_LIBRARY_OPTIMIZED_PATH}
   debug ${QT_GIF_LIBRARY_DEBUG_PATH}
   optimized ${QT_GIF_LIBRARY_OPTIMIZED_PATH}
   debug ${QT_SVG_ICON_PLUGIN_LIBRARY_DEBUG_PATH}

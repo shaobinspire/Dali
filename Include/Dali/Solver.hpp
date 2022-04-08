@@ -2,7 +2,7 @@
 #define DALI_SOLVER_H
 #include <c++/z3++.h>
 #include "Dali/Constraints.hpp"
-#include "Dali/Dali.hpp"
+//#include "Dali/Dali.hpp"
 
 namespace Dali {
 

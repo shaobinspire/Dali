@@ -40,7 +40,7 @@ namespace Dali {
 
     private:
       std::vector<LayoutBox*> m_boxes;
-      std::unordered_map<QString, int> m_name_map;
+      std::map<QString, int> m_name_map;
       std::vector<int> m_width_sorted_constraint;
       std::vector<int> m_height_sorted_constraint;
       std::vector<int> m_top_row;

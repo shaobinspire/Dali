@@ -10,11 +10,11 @@ if(MSVC)
 endif()
 add_library(Library ${header_files} ${source_files})
 
-if(WIN32)
-  target_link_libraries(Library
-    debug ${Z3_LIBRARY_DEBUG_PATH}
-    optimized ${Z3_LIBRARY_OPTIMIZED_PATH})
-endif(WIN32)
+#if(WIN32)
+#  target_link_libraries(Library
+#    debug ${Z3_LIBRARY_DEBUG_PATH}
+#    optimized ${Z3_LIBRARY_OPTIMIZED_PATH})
+#endif(WIN32)
 
 set_source_files_properties(${header_files} PROPERTIES HEADER_FILE_ONLY TRUE)
 set_target_properties(Library PROPERTIES STATIC_LIBRARY_FLAGS_RELEASE

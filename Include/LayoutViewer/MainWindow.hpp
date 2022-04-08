@@ -16,6 +16,7 @@ namespace Dali {
     private:
       LayoutWidget* m_layout_widget;
       QLabel* m_size_label;
+      QLabel* m_layout_size_label;
       QAction* m_open_action;
       QAction* m_refresh_action;
       QString m_file_name;

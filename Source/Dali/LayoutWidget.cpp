@@ -66,10 +66,11 @@ Layout* parse(const json& json) {
 
 LayoutWidget::LayoutWidget(QWidget *parent)
   : QWidget(parent),
-    m_layout(nullptr)/*,
-    m_scale(1.0)*/ {}
+    m_layout(nullptr) {}
 
 bool LayoutWidget::parse_json_file(const QString& name) {
+  setMinimumSize(0, 0);
+  setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
   auto ifs = std::ifstream(name.toStdString());
   try {
     m_json = json::parse(ifs);
@@ -87,18 +88,6 @@ bool LayoutWidget::parse_json_file(const QString& name) {
   return true;
 }
 
-//double LayoutWidget::get_scale() const {
-//  return m_scale;
-//}
-
-//void LayoutWidget::set_scale(double scale) {
-//  if(!m_layout) {
-//    return;
-//  }
-//  m_scale = scale;
-//  //setFixedSize(m_layout->get_rect().size() * m_scale);
-//}
-
 QSize LayoutWidget::get_min_size() const {
   if(!m_layout) {
     return QSize();
@@ -113,16 +102,14 @@ QSize LayoutWidget::get_max_size() const {
   return m_layout->get_max_size();
 }
 
-void LayoutWidget::resize(const QSize&) {
+void LayoutWidget::update_size(const QSize& size) {
   if(m_layout) {
-    m_layout->resize(size());
-    //setFixedSize(m_layout->get_rect().size());
+    m_layout->resize(size);
   }
 }
 
 void LayoutWidget::paintEvent(QPaintEvent* event) {
   auto painter = QPainter(this);
-  //painter.scale(m_scale, m_scale);
   if(m_layout) {
     painter.save();
     for(auto i = 0; i < m_layout->get_box_count(); ++i) {

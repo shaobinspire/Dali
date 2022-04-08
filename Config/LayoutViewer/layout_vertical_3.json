@@ -1,34 +1,40 @@
-[
-  {
-    "name": "A",
-    "x": 0,
-    "y": 0,
-    "width": "200",
-    "height": "(height - B.height - D.height)/2",
-    "policy": "expanding"
-  },
-  {
-    "name": "B",
-    "x": 0,
-    "y": 200,
-    "height": "200",
-    "width": "200",
-    "policy": "fixed"
-  },
-  {
-    "name": "C",
-    "x": 0,
-    "y": 400,
-    "height": "A.height",
-    "width": "200",
-    "policy": "expanding"
-  },
-  {
-    "name": "D",
-    "x": 0,
-    "y": 600,
-    "height": "B.height",
-    "width": "200",
-    "policy": "fixed"
-  }
-]
+{
+  "layout": [
+    {
+      "name": "A",
+      "x": 0,
+      "y": 0,
+      "width": 200,
+      "height": 200,
+      "policy": "expanding"
+    },
+    {
+      "name": "B",
+      "x": 0,
+      "y": 200,
+      "height": 200,
+      "width": 200,
+      "policy": "fixed"
+    },
+    {
+      "name": "C",
+      "x": 0,
+      "y": 400,
+      "height": 200,
+      "width": 200,
+      "policy": "expanding"
+    },
+    {
+      "name": "D",
+      "x": 0,
+      "y": 600,
+      "height": 200,
+      "width": 200,
+      "policy": "expanding"
+    }
+  ],
+  "constraints": [
+    "A.height = C.height * 2",
+    "D.height = A.height + C.height"
+  ]
+}

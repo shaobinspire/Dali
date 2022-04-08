@@ -15,7 +15,6 @@ const auto MAX_SCALE_FACTOR = 8;
 const auto SCALE_FACTOR_STEP = 0.2;
 
 MainWindow::MainWindow() {
-    //: m_scale(1.0) {
   auto central_widget = new QWidget(this);
   auto layout = new QHBoxLayout(central_widget);
   m_layout_widget = new LayoutWidget();
@@ -23,9 +22,11 @@ MainWindow::MainWindow() {
   setCentralWidget(central_widget);
   create_menu();
   m_size_label = new QLabel();
+  m_layout_size_label = new QLabel();
   //m_size_label->setWindowFlag(Qt::FramelessWindowHint);
   //m_size_label->setAttribute(Qt::WA_NoSystemBackground);
   //m_size_label->setAttribute(Qt::WA_TranslucentBackground);
+  statusBar()->addPermanentWidget(m_layout_size_label);
   statusBar()->addPermanentWidget(m_size_label);
   statusBar()->showMessage(tr("Ready"));
   auto availableGeometry = screen()->availableGeometry();
@@ -36,7 +37,9 @@ MainWindow::MainWindow() {
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
-  m_layout_widget->resize(event->size());
+  m_layout_widget->update_size(m_layout_widget->size());
+  m_layout_size_label->setText(QString("Layout: %1x%2")
+    .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
   QWidget::resizeEvent(event);
 }
 
@@ -57,7 +60,6 @@ void MainWindow::open() {
 
 void MainWindow::refresh() {
   if(m_file_name.isEmpty()) {
-    m_refresh_action->setEnabled(false);
     return;
   }
   if(!m_layout_widget->parse_json_file(m_file_name)) {
@@ -68,11 +70,14 @@ void MainWindow::refresh() {
     message_box.exec();
   } else {
     m_refresh_action->setEnabled(true);
-    m_layout_widget->resize(size());
     statusBar()->showMessage(m_file_name.split("/").back());
     auto min_size = m_layout_widget->get_min_size();
     auto max_size = m_layout_widget->get_max_size();
+    m_layout_size_label->setText(QString("Layout: %1x%2")
+      .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
     m_size_label->setText(QString("min: %1x%2 max: %3x%4").arg(min_size.width()).
       arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
+    m_layout_widget->setGeometry(centralWidget()->geometry());
+    m_layout_widget->update_size(m_layout_widget->size());
   }
 }
