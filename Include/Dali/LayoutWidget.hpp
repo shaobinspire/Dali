@@ -17,6 +17,8 @@ namespace Dali {
 
       void update_size(const QSize& size);
 
+      bool has_valid_layout() const;
+
     protected:
       void paintEvent(QPaintEvent* event) override;
 

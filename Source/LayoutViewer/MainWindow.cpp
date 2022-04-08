@@ -10,10 +10,6 @@
 
 using namespace Dali;
 
-const auto MIN_SCALE_FACTOR = 0.4;
-const auto MAX_SCALE_FACTOR = 8;
-const auto SCALE_FACTOR_STEP = 0.2;
-
 MainWindow::MainWindow() {
   auto central_widget = new QWidget(this);
   auto layout = new QHBoxLayout(central_widget);
@@ -21,14 +17,17 @@ MainWindow::MainWindow() {
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
-  m_size_label = new QLabel();
+  m_file_name_label = new QLabel();
+  statusBar()->addWidget(m_file_name_label);
   m_layout_size_label = new QLabel();
-  //m_size_label->setWindowFlag(Qt::FramelessWindowHint);
-  //m_size_label->setAttribute(Qt::WA_NoSystemBackground);
-  //m_size_label->setAttribute(Qt::WA_TranslucentBackground);
   statusBar()->addPermanentWidget(m_layout_size_label);
+  m_size_label = new QLabel();
   statusBar()->addPermanentWidget(m_size_label);
   statusBar()->showMessage(tr("Ready"));
+  statusBar()->setStyleSheet(R"(
+    QStatusBar::item {
+      border: none;
+    })");
   auto availableGeometry = screen()->availableGeometry();
   resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
   move((availableGeometry.width() - width()) / 2,
@@ -37,9 +36,11 @@ MainWindow::MainWindow() {
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
-  m_layout_widget->update_size(m_layout_widget->size());
-  m_layout_size_label->setText(QString("Layout: %1x%2")
-    .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
+  if(m_layout_widget->has_valid_layout()) {
+    m_layout_widget->update_size(m_layout_widget->size());
+    m_layout_size_label->setText(QString("Layout: %1x%2    ")
+      .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
+  }
   QWidget::resizeEvent(event);
 }
 
@@ -69,15 +70,15 @@ void MainWindow::refresh() {
     message_box.setText("Invalid json file.");
     message_box.exec();
   } else {
-    m_refresh_action->setEnabled(true);
-    statusBar()->showMessage(m_file_name.split("/").back());
-    auto min_size = m_layout_widget->get_min_size();
-    auto max_size = m_layout_widget->get_max_size();
-    m_layout_size_label->setText(QString("Layout: %1x%2")
-      .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
-    m_size_label->setText(QString("min: %1x%2 max: %3x%4").arg(min_size.width()).
-      arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
     m_layout_widget->setGeometry(centralWidget()->geometry());
     m_layout_widget->update_size(m_layout_widget->size());
+    m_refresh_action->setEnabled(true);
+    m_file_name_label->setText(m_file_name.split("/").back());
+    auto min_size = m_layout_widget->get_min_size();
+    auto max_size = m_layout_widget->get_max_size();
+    m_layout_size_label->setText(QString("Layout Size: %1x%2    ")
+      .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
+    m_size_label->setText(QString("Min: %1x%2  Max: %3x%4").arg(min_size.width()).
+      arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
   }
 }

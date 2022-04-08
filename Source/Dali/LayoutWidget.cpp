@@ -108,6 +108,10 @@ void LayoutWidget::update_size(const QSize& size) {
   }
 }
 
+bool LayoutWidget::has_valid_layout() const {
+  return m_layout != nullptr;
+}
+
 void LayoutWidget::paintEvent(QPaintEvent* event) {
   auto painter = QPainter(this);
   if(m_layout) {
