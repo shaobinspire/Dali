@@ -1,6 +1,5 @@
 #include "Dali/Constraint.hpp"
 #include <stack>
-#include <QStringList>
 
 using namespace Dali;
 using namespace z3;
@@ -101,27 +100,6 @@ Constraint::Element parse_element(const QString& term) {
   }
   return element;
 }
-
-//double evaluate(const std::vector<Constraint::Element>& expression,
-//  const std::function<double (double number)>& get_number,
-//  const std::function<double (const QString& name)>& get_variable_value) {
-//  auto stack = std::stack<double>();
-//  for(auto& element : expression) {
-//    std::visit(overloaded{
-//      [&](double number) { stack.push(number); },
-//      [&] (const Constraint::Variable& variable) {
-//        stack.push(get_variable_value(variable.m_name));
-//      },
-//      [&] (const Constraint::Operator o) {
-//        auto a = stack.top();
-//        stack.pop();
-//        auto b = stack.top();
-//        stack.pop();
-//        stack.push(::evaluate(o, b, a));
-//      }}, element);
-//  }
-//  return stack.top();
-//}
 
 expr get_formula(context& context, const std::vector<Constraint::Element>& elements) {
   if(elements.empty()) {
@@ -251,17 +229,4 @@ void Constraint::parse() {
   }
   m_lhs_elements = convert_to_rpn(m_expression.mid(0, pos));
   m_rhs_elements = convert_to_rpn(m_expression.mid(pos + regexp.matchedLength()));
-  //auto list = m_expression.split(QRegExp("="));
-  //if(list.size() == 2) {
-    //m_lhs_elements = convert_to_rpn(list[0]);
-    //m_rhs_elements = convert_to_rpn(list[1]);
-  //}
 }
-
-//const expr Constraint::get_express() const {
-//  return m_expression;
-//}
-
-//Constraint Dali::parse_constraint_expression(const QString& expression) {
-//  return Constraint(convert_to_rpn(expression));
-//}

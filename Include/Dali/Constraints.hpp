@@ -1,9 +1,8 @@
 #ifndef DALI_CONSTRAINTS_H
 #define DALI_CONSTRAINTS_H
-#include <QString>
 #include <set>
-#include "Dali/Constraint.hpp"
-//#include "Dali/Dali.hpp"
+#include <QString>
+#include "Dali/Dali.hpp"
 
 namespace Dali {
 

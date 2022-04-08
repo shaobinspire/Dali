@@ -1,13 +1,20 @@
 #ifndef DALI_SOLVER_H
 #define DALI_SOLVER_H
 #include <c++/z3++.h>
-#include "Dali/Constraints.hpp"
+#include "Dali/Dali.hpp"
 
 namespace Dali {
+namespace Details {
+  struct ScopeExit {
+    std::function<void()> m_f;
+    ScopeExit(std::function<void()> f);
+    ~ScopeExit();
+  };
+}
 
   class Solver {
     public:
-      explicit Solver();
+      Solver();
 
       void add_constraints(const Constraints& constraints);
 

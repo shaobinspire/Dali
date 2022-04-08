@@ -1,7 +1,7 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
-#include <set>
 #include <map>
+#include <set>
 #include <vector>
 #include <QString>
 #include <QRect>

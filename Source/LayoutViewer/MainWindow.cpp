@@ -69,7 +69,8 @@ void MainWindow::refresh() {
     message_box.setText("Invalid json file.");
     message_box.exec();
   } else {
-    m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(centralWidget()->layout()->contentsMargins()));
+    m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(
+      centralWidget()->layout()->contentsMargins()));
     m_layout_widget->update_size(m_layout_widget->size());
     m_refresh_action->setEnabled(true);
     m_file_name_label->setText(m_file_name.split("/").back());

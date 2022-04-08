@@ -60,27 +60,3 @@ bool LayoutBox::is_name_visible() const {
 void LayoutBox::set_name_visible(bool is_visible) {
   m_is_name_visible = is_visible;
 }
-
-//const Constraint& LayoutBox::get_width_constraints() const {
-//  return m_width_constraints;
-//}
-//
-//Constraint& Dali::LayoutBox::get_width_constraints() {
-//  return m_width_constraints;
-//}
-//
-//void LayoutBox::set_width_constraints(const Constraint& constraints) {
-//  m_width_constraints = constraints;
-//}
-//
-//const Constraint& LayoutBox::get_height_constraints() const {
-//  return m_height_constraints;
-//}
-//
-//Constraint& Dali::LayoutBox::get_height_constraints() {
-//  return m_height_constraints;
-//}
-//
-//void LayoutBox::set_height_constraints(const Constraint& constraints) {
-//  m_height_constraints = constraints;
-//}

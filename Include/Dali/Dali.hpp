@@ -12,10 +12,12 @@ namespace Dali {
     Fixed
   };
 
-  class ConstraintGraph;
+  class Constraint;
+  class Constraints;
   class Layout;
   class LayoutBox;
   class LayoutWidget;
+  class Solver;
 }
 
 #endif

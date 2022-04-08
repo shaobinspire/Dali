@@ -4,8 +4,8 @@
 #include <QDesktopWidget>
 #include <QPainter>
 #include "Dali/Constraint.hpp"
-#include "Dali/LayoutBox.hpp"
 #include "Dali/Layout.hpp"
+#include "Dali/LayoutBox.hpp"
 
 using namespace Dali;
 using namespace nlohmann;
@@ -53,7 +53,8 @@ Layout* parse(const json& json) {
   }
   if(json.contains("constraints")) {
     for(auto& expression : json["constraints"]) {
-      auto constraint = Constraint(QString::fromStdString(expression.get<std::string>()));
+      auto constraint = Constraint(
+        QString::fromStdString(expression.get<std::string>()));
       if(constraint.is_width_related()) {
         layout->add_width_constraint(std::move(constraint));
       } else {

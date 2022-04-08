@@ -1,4 +1,5 @@
 #include "Dali/Constraints.hpp"
+#include "Dali/Constraint.hpp"
 
 using namespace Dali;
 
