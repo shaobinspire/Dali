@@ -25,6 +25,7 @@ namespace Dali {
       void create_menu();
       void open();
       void refresh();
+      void update_layout_size_message();
   };
 }
 

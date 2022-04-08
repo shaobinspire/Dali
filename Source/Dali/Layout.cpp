@@ -6,8 +6,14 @@ using namespace Dali;
 
 void build_constraints(const std::vector<LayoutBox*>& boxes, const QString& property,
     Constraints& constraints) {
-  auto get_value = [=] (auto index) {
+  auto is_horiztonal = [&] {
     if(property == "width") {
+      return true;
+    }
+    return false;
+  }();
+  auto get_value = [=] (auto index) {
+    if(is_horiztonal) {
       return boxes[index]->get_rect().width();
     } else {
       return boxes[index]->get_rect().height();
@@ -17,13 +23,24 @@ void build_constraints(const std::vector<LayoutBox*>& boxes, const QString& prop
   auto sum_expression = QString();
   for(auto i = 0; i < static_cast<int>(boxes.size()); ++i) {
     sum_expression += boxes[i]->get_name() + "." + property + " +";
-    if(boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-      auto expression = QString("%1.%2 = %3").
-        arg(boxes[i]->get_name()).arg(property).
-        arg(get_value(i));
-      constraints.add_local_constraint(Constraint(expression), true);
-    } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
-      expanding_box_without_constraint.push_back({get_value(i), i});
+    if(is_horiztonal) {
+      if(boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+        auto expression = QString("%1.%2 = %3").
+          arg(boxes[i]->get_name()).arg(property).
+          arg(get_value(i));
+        constraints.add_local_constraint(Constraint(expression), true);
+      } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
+        expanding_box_without_constraint.push_back({get_value(i), i});
+      }
+    } else {
+      if(boxes[i]->get_vertical_size_policy() == SizePolicy::Fixed) {
+        auto expression = QString("%1.%2 = %3").
+          arg(boxes[i]->get_name()).arg(property).
+          arg(get_value(i));
+        constraints.add_local_constraint(Constraint(expression), true);
+      } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
+        expanding_box_without_constraint.push_back({get_value(i), i});
+      }
     }
     auto expression = QString("%1.%2 >= 0").arg(boxes[i]->get_name()).arg(property);
     constraints.add_local_constraint(Constraint(expression), true);

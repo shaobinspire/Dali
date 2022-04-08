@@ -1,0 +1,31 @@
+{
+  "layout": [
+    {
+      "name": "A",
+      "x": 0,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "policy": "expanding"
+    },
+    {
+      "name": "B",
+      "x": 0,
+      "y": 200,
+      "width": 200,
+      "height": 100,
+      "policy": "expanding"
+    },
+    {
+      "name": "C",
+      "x": 0,
+      "y": 200,
+      "width": 200,
+      "height": 150,
+      "policy": "expanding"
+    }
+  ],
+  "constraints": [
+    "C.height = (A.height + B.height) / 2 + 50"
+  ]
+}

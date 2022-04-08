@@ -38,8 +38,7 @@ MainWindow::MainWindow() {
 void MainWindow::resizeEvent(QResizeEvent* event) {
   if(m_layout_widget->has_valid_layout()) {
     m_layout_widget->update_size(m_layout_widget->size());
-    m_layout_size_label->setText(QString("Layout: %1x%2    ")
-      .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
+    update_layout_size_message();
   }
   QWidget::resizeEvent(event);
 }
@@ -70,15 +69,19 @@ void MainWindow::refresh() {
     message_box.setText("Invalid json file.");
     message_box.exec();
   } else {
-    m_layout_widget->setGeometry(centralWidget()->geometry());
+    m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(centralWidget()->layout()->contentsMargins()));
     m_layout_widget->update_size(m_layout_widget->size());
     m_refresh_action->setEnabled(true);
     m_file_name_label->setText(m_file_name.split("/").back());
+    update_layout_size_message();
     auto min_size = m_layout_widget->get_min_size();
     auto max_size = m_layout_widget->get_max_size();
-    m_layout_size_label->setText(QString("Layout Size: %1x%2    ")
-      .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
     m_size_label->setText(QString("Min: %1x%2  Max: %3x%4").arg(min_size.width()).
       arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
   }
+}
+
+void MainWindow::update_layout_size_message() {
+  m_layout_size_label->setText(QString("Layout Size: %1x%2    ")
+    .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
 }

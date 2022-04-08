@@ -1,9 +1,9 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
-#include <QString>
 #include <set>
 #include <map>
 #include <vector>
+#include <QString>
 #include <QRect>
 #include "Dali/Constraint.hpp"
 #include "Dali/Constraints.hpp"
