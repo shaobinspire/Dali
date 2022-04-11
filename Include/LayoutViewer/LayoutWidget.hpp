@@ -23,9 +23,7 @@ namespace Dali {
       void paintEvent(QPaintEvent* event) override;
 
     private:
-      std::unique_ptr<Layout> m_layout;
-      nlohmann::json m_json;
-      double m_scale;
+      std::shared_ptr<Layout> m_layout;
   };
 }
 

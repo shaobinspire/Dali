@@ -6,7 +6,7 @@
 #include <QResizeEvent>
 #include <QScreen>
 #include <QStatusBar>
-#include "Dali/LayoutWidget.hpp"
+#include "LayoutViewer/LayoutWidget.hpp"
 
 using namespace Dali;
 

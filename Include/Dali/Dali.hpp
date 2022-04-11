@@ -17,6 +17,7 @@ namespace Dali {
   class Layout;
   class LayoutBox;
   class LayoutWidget;
+  class Parser;
   class Solver;
 }
 

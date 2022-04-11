@@ -1,11 +1,11 @@
-#include "Dali/LayoutWidget.hpp"
-#include <fstream>
+#include "LayoutViewer/LayoutWidget.hpp"
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QPainter>
 #include "Dali/Constraint.hpp"
 #include "Dali/Layout.hpp"
 #include "Dali/LayoutBox.hpp"
+#include "Dali/Parser.hpp"
 
 using namespace Dali;
 using namespace nlohmann;
@@ -19,52 +19,6 @@ auto get_color(SizePolicy policy) {
   return color;
 }
 
-SizePolicy get_size_policy(const std::string& policy) {
-  if(policy == "fixed") {
-    return SizePolicy::Fixed;
-  }
-  return SizePolicy::Expanding;
-}
-
-Layout* parse(const json& json) {
-  auto layout = new Layout();
-  for(auto& item : json["layout"]) {
-    auto box = new LayoutBox();
-    if(item.contains("name")) {
-      box->set_name(QString::fromStdString(item["name"].get<std::string>()));
-    }
-    box->set_rect({item["x"], item["y"], item["width"], item["height"]});
-    if(item.contains("policy")) {
-      auto size_policy = get_size_policy(item["policy"]);
-      box->set_horizontal_size_policy(size_policy);
-      box->set_vertical_size_policy(size_policy);
-    } else {
-      if(item.contains("horizontal_policy")) {
-        box->set_horizontal_size_policy(
-          get_size_policy(item["horizontal_policy"]));
-      }
-      if(item.contains("vertical_policy")) {
-        box->set_vertical_size_policy(
-          get_size_policy(item["vertical_policy"]));
-      }
-    }
-    layout->set_rect(layout->get_rect().united(box->get_rect()));
-    layout->add_box(box);
-  }
-  if(json.contains("constraints")) {
-    for(auto& expression : json["constraints"]) {
-      auto constraint = Constraint(
-        QString::fromStdString(expression.get<std::string>()));
-      if(constraint.is_width_related()) {
-        layout->add_width_constraint(std::move(constraint));
-      } else {
-        layout->add_height_constraint(std::move(constraint));
-      }
-    }
-  }
-  return layout;
-}
-
 LayoutWidget::LayoutWidget(QWidget *parent)
   : QWidget(parent),
     m_layout(nullptr) {}
@@ -72,13 +26,11 @@ LayoutWidget::LayoutWidget(QWidget *parent)
 bool LayoutWidget::parse_json_file(const QString& name) {
   setMinimumSize(0, 0);
   setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-  auto ifs = std::ifstream(name.toStdString());
-  try {
-    m_json = json::parse(ifs);
-  } catch(json::exception&) {
+  auto parser = Parser();
+  m_layout = parser.parse(name.toStdString());
+  if(!m_layout) {
     return false;
   }
-  m_layout = std::move(std::unique_ptr<Layout>(parse(m_json)));
   if(m_layout) {
     if(!m_layout->build()) {
       return false;
