@@ -11,6 +11,8 @@ namespace Dali {
 
       std::shared_ptr<Layout> parse();
 
+      std::string get_content();
+
     private:
       nlohmann::json m_json;
   };

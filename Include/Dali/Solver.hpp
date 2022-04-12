@@ -1,5 +1,6 @@
 #ifndef DALI_SOLVER_H
 #define DALI_SOLVER_H
+#include <QString>
 #include <c++/z3++.h>
 #include "Dali/Dali.hpp"
 

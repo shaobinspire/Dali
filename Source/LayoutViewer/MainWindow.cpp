@@ -1,4 +1,6 @@
 #include "LayoutViewer/MainWindow.hpp"
+#include <QApplication>
+#include <QDockWidget>
 #include <QFileDialog>
 #include <QLayout>
 #include <QMenuBar>
@@ -6,17 +8,20 @@
 #include <QResizeEvent>
 #include <QScreen>
 #include <QStatusBar>
+#include <QStyleFactory>
 #include "LayoutViewer/LayoutWidget.hpp"
 
 using namespace Dali;
 
 MainWindow::MainWindow() {
   auto central_widget = new QWidget(this);
+  central_widget->setStyleSheet("background-color: #F1F1F1;");
   auto layout = new QHBoxLayout(central_widget);
   m_layout_widget = new LayoutWidget();
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
+  create_dock_window();
   m_file_name_label = new QLabel();
   statusBar()->addWidget(m_file_name_label);
   m_layout_size_label = new QLabel();
@@ -25,14 +30,17 @@ MainWindow::MainWindow() {
   statusBar()->addPermanentWidget(m_size_label);
   statusBar()->showMessage(tr("Ready"));
   statusBar()->setStyleSheet(R"(
+    QStatusBar {
+      background-color: #D8D8D8;
+    }
     QStatusBar::item {
+      background-color: #D8D8D8;
       border: none;
     })");
   auto availableGeometry = screen()->availableGeometry();
   resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
   move((availableGeometry.width() - width()) / 2,
     (availableGeometry.height() - height()) / 2);
-  setMinimumSize(0, 0);
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -43,6 +51,15 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
 }
 
+void MainWindow::create_dock_window() {
+  auto dock = new QDockWidget(tr("Layout"), this);
+  dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+  m_text_edit = new QPlainTextEdit();
+  dock->setWidget(m_text_edit);
+  addDockWidget(Qt::RightDockWidgetArea, dock);
+  m_view_menu->addAction(dock->toggleViewAction());
+}
+
 void MainWindow::create_menu() {
   auto file_menu = menuBar()->addMenu(tr("&File"));
   m_open_action = file_menu->addAction(tr("&Open..."), this, &MainWindow::open);
@@ -51,6 +68,7 @@ void MainWindow::create_menu() {
     file_menu->addAction(tr("&Refresh"), this, &MainWindow::refresh);
   m_refresh_action->setShortcuts(QKeySequence::Refresh);
   m_refresh_action->setEnabled(false);
+  m_view_menu = menuBar()->addMenu(tr("&View"));
 }
 
 void MainWindow::open() {
@@ -62,13 +80,15 @@ void MainWindow::refresh() {
   if(m_file_name.isEmpty()) {
     return;
   }
-  if(!m_layout_widget->parse_json_file(m_file_name)) {
+  if(auto layout = m_parser.parse(m_file_name.toStdString()); layout == nullptr) {
     m_refresh_action->setEnabled(false);
     auto message_box = QMessageBox();
     message_box.setIcon(QMessageBox::Warning);
     message_box.setText("Invalid json file.");
     message_box.exec();
   } else {
+    m_text_edit->setPlainText(QString::fromStdString(m_parser.get_content()));
+    m_layout_widget->set_layout(layout);
     m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(
       centralWidget()->layout()->contentsMargins()));
     m_layout_widget->update_size(m_layout_widget->size());

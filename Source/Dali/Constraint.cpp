@@ -1,4 +1,5 @@
 #include "Dali/Constraint.hpp"
+#include <QRegExp>
 #include <stack>
 
 using namespace Dali;

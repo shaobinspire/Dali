@@ -1,6 +1,7 @@
 #ifndef DALI_CONSTRAINTS_H
 #define DALI_CONSTRAINTS_H
 #include <set>
+#include <vector>
 #include <QString>
 #include "Dali/Dali.hpp"
 

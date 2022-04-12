@@ -5,7 +5,6 @@
 #include "Dali/Constraint.hpp"
 #include "Dali/Layout.hpp"
 #include "Dali/LayoutBox.hpp"
-#include "Dali/Parser.hpp"
 
 using namespace Dali;
 using namespace nlohmann;
@@ -23,22 +22,16 @@ LayoutWidget::LayoutWidget(QWidget *parent)
   : QWidget(parent),
     m_layout(nullptr) {}
 
-bool LayoutWidget::parse_json_file(const QString& name) {
+void LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   setMinimumSize(0, 0);
   setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-  auto parser = Parser();
-  m_layout = parser.parse(name.toStdString());
+  m_layout = layout;
   if(!m_layout) {
-    return false;
+    return;
   }
-  if(m_layout) {
-    if(!m_layout->build()) {
-      return false;
-    }
-    setMinimumSize(m_layout->get_min_size());
-    setMaximumSize(m_layout->get_max_size());
-  }
-  return true;
+  m_layout->build();
+  setMinimumSize(m_layout->get_min_size());
+  setMaximumSize(m_layout->get_max_size());
 }
 
 QSize LayoutWidget::get_min_size() const {

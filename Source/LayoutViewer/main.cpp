@@ -4,6 +4,7 @@
 
 #ifdef _MSC_VER
   Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
+  Q_IMPORT_PLUGIN(QWindowsVistaStylePlugin) 
 #elif __linux__
   Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)
 #endif

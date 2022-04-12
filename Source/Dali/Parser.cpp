@@ -53,6 +53,10 @@ std::shared_ptr<Layout> Parser::parse() {
   return layout;
 }
 
+std::string Parser::get_content() {
+  return m_json.dump(2);
+}
+
 std::shared_ptr<Layout> Parser::parse(const std::string& name) {
   auto ifs = std::ifstream(name);
   try {

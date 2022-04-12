@@ -10,7 +10,7 @@ namespace Dali {
     public:
       explicit LayoutWidget(QWidget* parent = nullptr);
 
-      bool parse_json_file(const QString& name);
+      void set_layout(std::shared_ptr<Layout> layout);
 
       QSize get_min_size() const;
       QSize get_max_size() const;

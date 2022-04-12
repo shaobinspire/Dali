@@ -48,8 +48,10 @@ if(WIN32)
     optimized ${QT_WINDOWS_ACCESSIBILITY_LIBRARY_OPTIMIZED_PATH}
     debug ${QT_WINDOWS_LIBRARY_DEBUG_PATH}
     optimized ${QT_WINDOWS_LIBRARY_OPTIMIZED_PATH}
+    debug ${QT_WINDOWS_VISTA_STYLE_DEBUG_PATH}
+    optimized ${QT_WINDOWS_VISTA_STYLE_OPTIMIZED_PATH}
     dwmapi.lib imm32.lib netapi32.lib opengl32.lib Userenv.lib
-    version.lib winmm.lib ws2_32.lib Wtsapi32.lib)
+    version.lib winmm.lib ws2_32.lib Wtsapi32.lib uxtheme.lib)
 endif(WIN32)
 
 install(TARGETS LayoutViewer DESTINATION ${DALI_TESTS_INSTALL_DIRECTORY})

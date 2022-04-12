@@ -63,4 +63,8 @@ set(QT_WINDOWS_ACCESSIBILITY_LIBRARY_DEBUG_PATH
   "${QT_LIBRARY_DEBUG_PATH}/Qt5WindowsUIAutomationSupportd.lib")
 set(QT_WINDOWS_ACCESSIBILITY_LIBRARY_OPTIMIZED_PATH
   "${QT_LIBRARY_OPTIMIZED_PATH}/Qt5WindowsUIAutomationSupport.lib")
-  set(JSON_INCLUDE_PATH "${PROJECT_BINARY_DIR}/third_party/json/single_include")
+set(QT_WINDOWS_VISTA_STYLE_DEBUG_PATH
+  "${QT_ROOT}/qtbase/plugins/styles/qwindowsvistastyled.lib")
+set(QT_WINDOWS_VISTA_STYLE_OPTIMIZED_PATH
+  "${QT_ROOT}/qtbase/plugins/styles/qwindowsvistastyle.lib")
+set(JSON_INCLUDE_PATH "${PROJECT_BINARY_DIR}/third_party/json/single_include")
