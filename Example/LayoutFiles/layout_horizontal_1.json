@@ -6,7 +6,8 @@
       "y": 0,
       "width": 200,
       "height": 200,
-      "policy": "expanding"
+      "horizontal": "take_space",
+      "vertical": "expanding"
     },
     {
       "name": "B",
@@ -14,15 +15,17 @@
       "y": 0,
       "width": 200,
       "height": 200,
-      "policy": "fixed"
+      "horizontal": "fixed",
+      "vertical": "fixed"
     },
     {
       "name": "C",
       "x": 400,
-      "y": 0,
+      "y": "0",
       "width": 400,
       "height": 200,
-      "policy": "expanding"
+      "horizontal": "take_space",
+      "vertical": "take_space"
     }
   ],
   "constraints": [

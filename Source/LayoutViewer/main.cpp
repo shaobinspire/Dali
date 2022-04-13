@@ -1,3 +1,5 @@
+#define JSON_DIAGNOSTICS 1
+
 #include <QApplication>
 #include <QtPlugin>
 #include "LayoutViewer/MainWindow.hpp"

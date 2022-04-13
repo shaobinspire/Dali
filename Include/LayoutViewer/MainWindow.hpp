@@ -1,9 +1,9 @@
 #ifndef DALI_MAIN_WINDOW_H
 #define DALI_MAIN_WINDOW_H
 #include <QLabel>
-#include <QPlainTextEdit>
 #include <QMainWindow>
 #include "Dali/Parser.hpp"
+#include "LayoutViewer/JsonEditor.hpp"
 
 namespace Dali {
 
@@ -16,7 +16,8 @@ namespace Dali {
 
     private:
       LayoutWidget* m_layout_widget;
-      QPlainTextEdit* m_text_edit;
+      JsonEditor* m_editor;
+      QTextEdit* m_error_output;
       QMenu* m_view_menu;
       QLabel* m_file_name_label;
       QLabel* m_layout_size_label;
@@ -26,10 +27,11 @@ namespace Dali {
       QString m_file_name;
       Parser m_parser;
 
-      void create_dock_window();
+      void create_dock_windows();
       void create_menu();
       void open();
-      void refresh();
+      //void refresh();
+      void parse_result(bool is_failed);
       void update_layout_size_message();
   };
 }

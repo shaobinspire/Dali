@@ -1,6 +1,5 @@
 #include "Dali/Parser.hpp"
 #include <fstream>
-#include <QWidget>
 #include "Dali/Layout.hpp"
 #include "Dali/LayoutBox.hpp"
 
@@ -14,7 +13,7 @@ SizePolicy get_size_policy(const std::string& policy) {
   return SizePolicy::Expanding;
 }
 
-std::shared_ptr<Layout> Parser::parse() {
+std::shared_ptr<Layout> Parser::parse(const nlohmann::json& m_json) {
   auto layout = std::make_shared<Layout>();
   for(auto& item : m_json["layout"]) {
     auto box = new LayoutBox();
@@ -27,13 +26,13 @@ std::shared_ptr<Layout> Parser::parse() {
       box->set_horizontal_size_policy(size_policy);
       box->set_vertical_size_policy(size_policy);
     } else {
-      if(item.contains("horizontal_policy")) {
+      if(item.contains("horizontal")) {
         box->set_horizontal_size_policy(
-          get_size_policy(item["horizontal_policy"]));
+          get_size_policy(item["horizontal"]));
       }
-      if(item.contains("vertical_policy")) {
+      if(item.contains("vertical")) {
         box->set_vertical_size_policy(
-          get_size_policy(item["vertical_policy"]));
+          get_size_policy(item["vertical"]));
       }
     }
     layout->set_rect(layout->get_rect().united(box->get_rect()));
@@ -52,17 +51,17 @@ std::shared_ptr<Layout> Parser::parse() {
   }
   return layout;
 }
-
-std::string Parser::get_content() {
-  return m_json.dump(2);
-}
-
-std::shared_ptr<Layout> Parser::parse(const std::string& name) {
-  auto ifs = std::ifstream(name);
-  try {
-    m_json = json::parse(ifs);
-    return parse();
-  } catch(json::exception&) {
-    return nullptr;
-  }
-}
+//
+//std::string Parser::get_content() {
+//  return m_json.dump(2);
+//}
+//
+//std::shared_ptr<Layout> Parser::parse(const std::string& name) {
+//  auto ifs = std::ifstream(name);
+//  try {
+//    m_json = json::parse(ifs);
+//    return parse();
+//  } catch(json::exception&) {
+//    return nullptr;
+//  }
+//}

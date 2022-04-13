@@ -8,7 +8,6 @@
 #include <QResizeEvent>
 #include <QScreen>
 #include <QStatusBar>
-#include <QStyleFactory>
 #include "LayoutViewer/LayoutWidget.hpp"
 
 using namespace Dali;
@@ -21,7 +20,7 @@ MainWindow::MainWindow() {
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
-  create_dock_window();
+  create_dock_windows();
   m_file_name_label = new QLabel();
   statusBar()->addWidget(m_file_name_label);
   m_layout_size_label = new QLabel();
@@ -51,49 +50,50 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
 }
 
-void MainWindow::create_dock_window() {
-  auto dock = new QDockWidget(tr("Layout"), this);
-  dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-  m_text_edit = new QPlainTextEdit();
-  dock->setWidget(m_text_edit);
-  addDockWidget(Qt::RightDockWidgetArea, dock);
-  m_view_menu->addAction(dock->toggleViewAction());
+void MainWindow::create_dock_windows() {
+  auto json_dock = new QDockWidget(tr("Json"), this);
+  json_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+  m_editor = new JsonEditor();
+  m_editor->connect_parse_result(std::bind_front(&MainWindow::parse_result, this));
+  json_dock->setWidget(m_editor);
+  addDockWidget(Qt::RightDockWidgetArea, json_dock);
+  m_view_menu->addAction(json_dock->toggleViewAction());
+  auto error_dock = new QDockWidget(tr("Error Output"), this);
+  error_dock->setAllowedAreas(Qt::BottomDockWidgetArea);
+  m_error_output = new QTextEdit();
+  m_error_output->setReadOnly(true);
+  error_dock->setWidget(m_error_output);
+  addDockWidget(Qt::BottomDockWidgetArea, error_dock);
+  m_view_menu->addAction(error_dock->toggleViewAction());
 }
 
 void MainWindow::create_menu() {
   auto file_menu = menuBar()->addMenu(tr("&File"));
   m_open_action = file_menu->addAction(tr("&Open..."), this, &MainWindow::open);
   m_open_action->setShortcuts(QKeySequence::Open);
-  m_refresh_action =
-    file_menu->addAction(tr("&Refresh"), this, &MainWindow::refresh);
-  m_refresh_action->setShortcuts(QKeySequence::Refresh);
-  m_refresh_action->setEnabled(false);
+  //m_refresh_action =
+  //  file_menu->addAction(tr("&Refresh"), this, &MainWindow::refresh);
+  //m_refresh_action->setShortcuts(QKeySequence::Refresh);
+  //m_refresh_action->setEnabled(false);
   m_view_menu = menuBar()->addMenu(tr("&View"));
 }
 
 void MainWindow::open() {
   m_file_name = QFileDialog::getOpenFileName(this);
-  refresh();
+  m_editor->load_json(m_file_name);
+  m_file_name_label->setText(m_file_name.split("/").back());
 }
 
-void MainWindow::refresh() {
-  if(m_file_name.isEmpty()) {
-    return;
-  }
-  if(auto layout = m_parser.parse(m_file_name.toStdString()); layout == nullptr) {
-    m_refresh_action->setEnabled(false);
-    auto message_box = QMessageBox();
-    message_box.setIcon(QMessageBox::Warning);
-    message_box.setText("Invalid json file.");
-    message_box.exec();
+void MainWindow::parse_result(bool is_failed) {
+  if(is_failed) {
+    m_error_output->setText(QString::fromStdString(m_editor->get_errors()));
   } else {
-    m_text_edit->setPlainText(QString::fromStdString(m_parser.get_content()));
+    m_error_output->setText("");
+    auto layout = m_parser.parse(m_editor->get_json());
     m_layout_widget->set_layout(layout);
     m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(
       centralWidget()->layout()->contentsMargins()));
     m_layout_widget->update_size(m_layout_widget->size());
-    m_refresh_action->setEnabled(true);
-    m_file_name_label->setText(m_file_name.split("/").back());
     update_layout_size_message();
     auto min_size = m_layout_widget->get_min_size();
     auto max_size = m_layout_widget->get_max_size();

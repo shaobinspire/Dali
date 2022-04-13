@@ -7,14 +7,14 @@ namespace Dali {
   class Parser {
     public:
 
-      std::shared_ptr<Layout> parse(const std::string& name);
+      std::shared_ptr<Layout> parse(const nlohmann::json& m_json);
 
-      std::shared_ptr<Layout> parse();
+      //std::shared_ptr<Layout> parse();
 
-      std::string get_content();
+      //std::string get_content();
 
     private:
-      nlohmann::json m_json;
+      //nlohmann::json m_json;
   };
 }
 
