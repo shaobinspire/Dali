@@ -14,6 +14,7 @@
 using namespace Dali;
 
 int main(int argc, char** argv) {
+  Q_INIT_RESOURCE(Resources);
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
     Qt::HighDpiScaleFactorRoundingPolicy::Floor);

@@ -59,7 +59,8 @@ json& get_layout_schema() {
           "type": "string"
         }
       }
-    }
+    },
+    "required": ["layout"]
   })"_json;
   return layout_schema;
 }
@@ -83,7 +84,6 @@ void JsonEditor::load_json(const QString& file_name) {
   auto text = std::string(std::istreambuf_iterator<char>(ifs),
                  std::istreambuf_iterator<char>());
   setPlainText(QString::fromStdString(text));
-  parse(text);
 }
 
 const nlohmann::json& JsonEditor::get_json() const {

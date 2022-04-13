@@ -12,7 +12,8 @@ namespace Dali {
       MainWindow();
 
     protected:
-      void resizeEvent(QResizeEvent* event) override;
+      bool eventFilter(QObject* watched, QEvent* event) override;
+      void closeEvent(QCloseEvent *event) override;
 
     private:
       LayoutWidget* m_layout_widget;
@@ -22,7 +23,6 @@ namespace Dali {
       QLabel* m_file_name_label;
       QLabel* m_layout_size_label;
       QLabel* m_size_label;
-      QAction* m_open_action;
       QAction* m_refresh_action;
       QString m_file_name;
       Parser m_parser;
@@ -30,7 +30,11 @@ namespace Dali {
       void create_dock_windows();
       void create_menu();
       void open();
-      //void refresh();
+      void refresh();
+      bool save();
+      bool save_as();
+      bool save_file(const QString& file_name);
+      bool maybe_save();
       void parse_result(bool is_failed);
       void update_layout_size_message();
   };

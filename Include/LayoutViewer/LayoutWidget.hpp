@@ -15,11 +15,12 @@ namespace Dali {
       QSize get_min_size() const;
       QSize get_max_size() const;
 
-      void update_size(const QSize& size);
+      //void update_size(const QSize& size);
 
       bool has_valid_layout() const;
 
     protected:
+      void resizeEvent(QResizeEvent* event) override;
       void paintEvent(QPaintEvent* event) override;
 
     private:

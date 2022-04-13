@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QPainter>
+#include <QResizeEvent>
 #include "Dali/Constraint.hpp"
 #include "Dali/Layout.hpp"
 #include "Dali/LayoutBox.hpp"
@@ -32,6 +33,7 @@ void LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   m_layout->build();
   setMinimumSize(m_layout->get_min_size());
   setMaximumSize(m_layout->get_max_size());
+  m_layout->resize(size());
 }
 
 QSize LayoutWidget::get_min_size() const {
@@ -48,14 +50,21 @@ QSize LayoutWidget::get_max_size() const {
   return m_layout->get_max_size();
 }
 
-void LayoutWidget::update_size(const QSize& size) {
-  if(m_layout) {
-    m_layout->resize(size);
-  }
-}
+//void LayoutWidget::update_size(const QSize& size) {
+//  if(m_layout) {
+//    m_layout->resize(size);
+//  }
+//}
 
 bool LayoutWidget::has_valid_layout() const {
   return m_layout != nullptr;
+}
+
+void LayoutWidget::resizeEvent(QResizeEvent* event) {
+  if(m_layout) {
+    m_layout->resize(event->size());
+  }
+  QWidget::resizeEvent(event);
 }
 
 void LayoutWidget::paintEvent(QPaintEvent* event) {
