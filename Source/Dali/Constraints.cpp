@@ -41,6 +41,6 @@ const Constraint& Constraints::get_constraint(int index) const {
   return m_constraints[index];
 }
 
-bool Constraints::has_varaible_name_in_global(const QString& name) {
+bool Constraints::has_varaible_name_in_global(const std::string& name) {
   return m_global_variable_name.contains(name);
 }

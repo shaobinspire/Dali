@@ -1,6 +1,5 @@
 #ifndef DALI_SOLVER_H
 #define DALI_SOLVER_H
-#include <QString>
 #include <c++/z3++.h>
 #include "Dali/Dali.hpp"
 
@@ -19,7 +18,7 @@ namespace Details {
 
       void add_constraints(const Constraints& constraints);
 
-      std::vector<std::pair<QString, double>> solve(int value);
+      std::vector<std::pair<std::string, double>> solve(int value);
 
       int get_min_value();
       int get_max_value();

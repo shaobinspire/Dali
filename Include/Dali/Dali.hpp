@@ -7,6 +7,8 @@
 namespace Dali {
   const auto layout_name = "layout";
 
+  const auto MAX_LAYOUT_SIZE = (1 << 24) - 1;
+
   enum class SizePolicy {
     Expanding,
     Fixed

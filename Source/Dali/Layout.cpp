@@ -1,10 +1,10 @@
 #include "Dali/Layout.hpp"
-#include <QWidget>
+#include <sstream>
 #include "Dali/LayoutBox.hpp"
 
 using namespace Dali;
 
-void build_constraints(const std::vector<LayoutBox*>& boxes, const QString& property,
+void build_constraints(const std::vector<LayoutBox*>& boxes, const std::string& property,
     Constraints& constraints) {
   auto is_horiztonal = [&] {
     if(property == "width") {
@@ -20,49 +20,49 @@ void build_constraints(const std::vector<LayoutBox*>& boxes, const QString& prop
     }
   };
   auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
-  auto sum_expression = QString();
+  auto sum_expression = std::string();
   for(auto i = 0; i < static_cast<int>(boxes.size()); ++i) {
     sum_expression += boxes[i]->get_name() + "." + property + " +";
     if(is_horiztonal) {
       if(boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-        auto expression = QString("%1.%2 = %3").
-          arg(boxes[i]->get_name()).arg(property).
-          arg(get_value(i));
-        constraints.add_local_constraint(Constraint(expression), true);
+        auto sstr = std::ostringstream();
+        sstr << boxes[i]->get_name() << "." << property << "=" << get_value(i);
+        constraints.add_local_constraint(Constraint(sstr.str()), true);
       } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
         expanding_box_without_constraint.push_back({get_value(i), i});
       }
     } else {
       if(boxes[i]->get_vertical_size_policy() == SizePolicy::Fixed) {
-        auto expression = QString("%1.%2 = %3").
-          arg(boxes[i]->get_name()).arg(property).
-          arg(get_value(i));
-        constraints.add_local_constraint(Constraint(expression), true);
+        auto sstr = std::ostringstream();
+        sstr << boxes[i]->get_name() << "." << property << "=" << get_value(i);
+        constraints.add_local_constraint(Constraint(sstr.str()), true);
       } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
         expanding_box_without_constraint.push_back({get_value(i), i});
       }
     }
-    auto expression = QString("%1.%2 >= 0").arg(boxes[i]->get_name()).arg(property);
-    constraints.add_local_constraint(Constraint(expression), true);
+    auto sstr = std::ostringstream();
+    sstr << boxes[i]->get_name() << "." << property << ">= 0";
+    constraints.add_local_constraint(Constraint(sstr.str()), true);
   }
   if(!expanding_box_without_constraint.empty()) {
     std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
     for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
-      auto expression = QString("%1.%2 = %3.%2 * %4").
-        arg(boxes[iter->second]->get_name()).arg(property).
-        arg(boxes[expanding_box_without_constraint.begin()->second]->get_name()).
-        arg(static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first);
-      constraints.add_local_constraint(Constraint(expression), false);
+      auto sstr = std::ostringstream();
+      sstr << boxes[iter->second]->get_name() << "." << property << "=" <<
+        boxes[expanding_box_without_constraint.begin()->second]->get_name() <<
+        "." << property << " * " <<
+        static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first;
+      constraints.add_local_constraint(Constraint(sstr.str()), false);
     }
   }
-  sum_expression.chop(1);
+  sum_expression.pop_back();
   sum_expression += "= width";
   constraints.add_local_constraint(Constraint(sum_expression), true);
 }
 
 Layout::Layout()
   : m_min_size(0, 0),
-    m_max_size(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX) {}
+    m_max_size(MAX_LAYOUT_SIZE, MAX_LAYOUT_SIZE) {}
 
 Layout::~Layout() {
   for(auto box : m_boxes) {
@@ -82,8 +82,8 @@ void Layout::add_box(LayoutBox* box) {
   if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
     m_rect = m_rect.united(box->get_rect());
   }
-  if(box->get_name().isEmpty()) {
-    box->set_name(QString("BOX%1").arg(m_boxes.size()));
+  if(box->get_name().empty()) {
+    box->set_name("DALI_LAYOUT_BOX" + m_boxes.size());
     box->set_name_visible(false);
   }
   m_boxes.push_back(box);
@@ -179,7 +179,7 @@ bool Layout::build() {
   return true;
 }
 
-int Layout::get_index_by_name(const QString& name) {
+int Layout::get_index_by_name(const std::string& name) {
   if(auto iter = m_name_map.find(name); iter != m_name_map.end()) {
     return iter->second;
   }

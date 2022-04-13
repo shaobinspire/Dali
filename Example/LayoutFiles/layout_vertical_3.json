@@ -6,7 +6,8 @@
       "y": 0,
       "width": 200,
       "height": 200,
-      "policy": "expanding"
+      "horizontal": "take_space",
+      "vertical": "take_space"
     },
     {
       "name": "B",
@@ -14,7 +15,8 @@
       "y": 200,
       "height": 200,
       "width": 200,
-      "policy": "fixed"
+      "horizontal": "fixed",
+      "vertical": "fixed"
     },
     {
       "name": "C",
@@ -22,7 +24,8 @@
       "y": 400,
       "height": 200,
       "width": 200,
-      "policy": "expanding"
+      "horizontal": "take_space",
+      "vertical": "take_space"
     },
     {
       "name": "D",
@@ -30,7 +33,8 @@
       "y": 600,
       "height": 200,
       "width": 200,
-      "policy": "expanding"
+      "horizontal": "take_space",
+      "vertical": "take_space"
     }
   ],
   "constraints": [

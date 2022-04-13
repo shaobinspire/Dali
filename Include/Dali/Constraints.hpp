@@ -1,8 +1,7 @@
 #ifndef DALI_CONSTRAINTS_H
 #define DALI_CONSTRAINTS_H
-#include <set>
+#include <unordered_set>
 #include <vector>
-#include <QString>
 #include "Dali/Dali.hpp"
 
 namespace Dali {
@@ -13,10 +12,10 @@ namespace Dali {
       void add_global_constraint(const Constraint& constraint);
       int get_constraint_count() const;
       const Constraint& get_constraint(int index) const;
-      bool has_varaible_name_in_global(const QString& name);
+      bool has_varaible_name_in_global(const std::string& name);
     private:
       std::vector<Constraint> m_constraints;
-      std::set<QString> m_global_variable_name;
+      std::unordered_set<std::string> m_global_variable_name;
   };
 }
 

@@ -1,5 +1,5 @@
 #include "Dali/Constraint.hpp"
-#include <QRegExp>
+#include <regex>
 #include <stack>
 
 using namespace Dali;
@@ -9,11 +9,32 @@ template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 struct ExpressionToken {
-  QString m_token;
+  std::string m_token;
   bool m_is_operator;
 };
 
-auto to_property(const QString& value) {
+void ltrim(std::string &s) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [] (unsigned char ch) {
+    return !std::isspace(ch);
+  }));
+}
+
+void rtrim(std::string &s) {
+  s.erase(std::find_if(s.rbegin(), s.rend(), [] (unsigned char ch) {
+    return !std::isspace(ch);
+  }).base(), s.end());
+}
+
+void trim(std::string &s) {
+  ltrim(s);
+  rtrim(s);
+}
+
+bool is_number(const std::string &s) {
+  return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
+}
+
+auto to_property(const std::string& value) {
   if(value == "height" || value == "height()") {
     return Constraint::Property::HEIGHT;
   } else if(value == "width" || value == "width()") {
@@ -22,7 +43,7 @@ auto to_property(const QString& value) {
   return Constraint::Property::NONE;
 }
 
-auto to_operator(const QString& value) {
+auto to_operator(const std::string& value) {
   if(value == "+") {
     return Constraint::Operator::ADDITION;
   } else if(value == "-") {
@@ -48,7 +69,7 @@ auto evaluate(Constraint::Operator o, const expr& a, const expr& b) {
   return a;
 }
 
-int get_precedence(const QString& op) {
+int get_precedence(const std::string& op) {
   if(op == "+" || op == "-") {
     return 1;
   } else if(op == "*" || op == "/") {
@@ -57,47 +78,41 @@ int get_precedence(const QString& op) {
   return -1;
 }
 
-std::vector<ExpressionToken> split(const QString& expression) {
-  auto separators = QRegExp("[()+\\-*\\/]");
-  auto index = 0;
+std::vector<ExpressionToken> split(const std::string& expression) {
+  auto reg_exp = std::regex("([()+\\-*\\/]|[^()+\\-*\\/]+)");
+  auto tokens = std::vector<std::string>(
+    std::sregex_token_iterator(expression.begin(), expression.end(), reg_exp),
+    std::sregex_token_iterator());
   auto list = std::vector<ExpressionToken>();
-  for(auto i = 0; i < expression.length(); ++i) {
-    auto k = expression.indexOf(separators, i);
-    if(k < 0) {
-      list.push_back({expression.mid(i).trimmed(), false});
-      break;
+  auto operator_exp = std::regex("[()+\\-*\\/]");
+  for(auto& token : tokens) {
+    trim(token);
+    if(std::regex_match(token, operator_exp)) {
+      list.push_back({token, true});
     } else {
-      if(k - index > 0) {
-        auto token = expression.mid(index, k - index).trimmed();
-        if(!token.isEmpty()) {
-          list.push_back({token, false});
-        }
-      }
-      list.push_back({expression.mid(k, 1), true});
-      index = k + 1;
-      i = k;
+      list.push_back({token, false});
     }
   }
   return list;
 }
 
-Constraint::Variable parse_variable(const QString& term) {
+Constraint::Variable parse_variable(const std::string& term) {
   auto variable = Constraint::Variable();
-  if(term.contains(".")) {
-    variable.m_name = term.section('.', 0, 0);
-    variable.m_property = to_property(term.section('.', 1, 1));
+  if(auto p = term.find("."); p != std::string::npos) {
+    variable.m_name = term.substr(0, p);
+    variable.m_property = to_property(term.substr(p + 1));
   } else {
     variable.m_property = to_property(term);
   }
   return variable;
 }
 
-Constraint::Element parse_element(const QString& term) {
+Constraint::Element parse_element(const std::string& term) {
   auto element = Constraint::Element();
-  if(term.contains(QRegExp("[a-zA-Z]"))) {
-    element = parse_variable(term);
+  if(term.find_first_not_of(".0123456789") == std::string::npos) {
+    element = std::stod(term);
   } else {
-    element = term.toDouble();
+    element = parse_variable(term);
   }
   return element;
 }
@@ -113,10 +128,10 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
         stack.push(context.real_val(std::to_string(number).c_str()));
       },
       [&] (const Constraint::Variable& variable) {
-        if(variable.m_name.isEmpty()) {
+        if(variable.m_name.empty()) {
           stack.push(context.real_const(layout_name));
         } else {
-          stack.push(context.real_const(variable.m_name.toStdString().c_str()));
+          stack.push(context.real_const(variable.m_name.c_str()));
         }
       },
       [&] (const Constraint::Operator o) {
@@ -130,7 +145,7 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
   return stack.top();
 }
 
-Constraint::Constraint(QString expression)
+Constraint::Constraint(std::string expression)
     : m_expression(std::move(expression)),
       m_is_width_related(true) {
   parse();
@@ -154,7 +169,7 @@ expr Constraint::convert_to_formula(context& context) const {
   return expr(context);
 }
 
-const std::set<QString>& Constraint::get_variable_names() const {
+const std::unordered_set<std::string>& Constraint::get_variable_names() const {
   return m_variable_names;
 }
 
@@ -166,7 +181,7 @@ Constraint::ComparisonOperator Constraint::get_comparsion_operator() const {
   return m_comparison_operator;
 }
 
-std::vector<Constraint::Element> Constraint::convert_to_rpn(const QString& expression) {
+std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& expression) {
   auto elements = std::vector<Constraint::Element>();
   auto operator_stack = std::stack<ExpressionToken>();
   auto list = split(expression);
@@ -209,25 +224,25 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const QString& expre
 }
 
 void Constraint::parse() {
-  auto regexp = QRegExp("(=|>|<|>=|<=)");
-  auto pos = m_expression.indexOf(regexp);
-  if(pos == -1) {
+  auto reg_exp = std::regex("(=|[<>]=?)");
+  auto match = std::smatch();
+  if(!std::regex_search(m_expression, match, reg_exp)) {
     return;
   }
-  auto match = regexp.cap();
-  if(match == "=") {
+  if(match.str() == "=") {
     m_comparison_operator = ComparisonOperator::EQUAL_TO;
-  } else if(match == "<") {
+  } else if(match.str() == "<") {
     m_comparison_operator = ComparisonOperator::LESS_THAN;
-  } else if(match == "<=") {
+  } else if(match.str() == "<=") {
     m_comparison_operator = ComparisonOperator::LESS_THAN_OR_EQUAL_TO;
-  } else if(match == ">") {
+  } else if(match.str() == ">") {
     m_comparison_operator = ComparisonOperator::GREATER_THAN;
-  } else if(match == ">=") {
+  } else if(match.str() == ">=") {
     m_comparison_operator = ComparisonOperator::GREATER_THAN_OR_EQUAL_TO;
   } else {
     m_comparison_operator = ComparisonOperator::NONE;
+    return;
   }
-  m_lhs_elements = convert_to_rpn(m_expression.mid(0, pos));
-  m_rhs_elements = convert_to_rpn(m_expression.mid(pos + regexp.matchedLength()));
+  m_lhs_elements = convert_to_rpn(match.prefix());
+  m_rhs_elements = convert_to_rpn(match.suffix());
 }

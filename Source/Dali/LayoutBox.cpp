@@ -45,11 +45,11 @@ void LayoutBox::set_vertical_size_policy(SizePolicy policy) {
   m_vertical_size_policy = policy;
 }
 
-QString LayoutBox::get_name() const {
+std::string LayoutBox::get_name() const {
   return m_name;
 }
 
-void LayoutBox::set_name(const QString& name) {
+void LayoutBox::set_name(const std::string& name) {
   m_name = name;
 }
 

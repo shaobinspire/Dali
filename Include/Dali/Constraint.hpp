@@ -1,9 +1,8 @@
 #ifndef DALI_CONSTRAINT_H
 #define DALI_CONSTRAINT_H
 #include <c++/z3++.h>
-#include <set>
+#include <unordered_set>
 #include <variant>
-#include <QString>
 #include "Dali/Dali.hpp"
 
 namespace Dali {
@@ -35,32 +34,32 @@ namespace Dali {
       };
 
       struct Variable {
-        QString m_name;
+        std::string m_name;
         Property m_property;
       };
 
       using Element = std::variant<double, Operator, Variable>;
 
-      explicit Constraint(QString expression);
+      explicit Constraint(std::string expression);
 
       z3::expr convert_to_formula(z3::context& context) const;
 
-      const std::set<QString>& get_variable_names() const;
+      const std::unordered_set<std::string>& get_variable_names() const;
 
       bool is_width_related() const;
 
       ComparisonOperator get_comparsion_operator() const;
 
     private:
-      QString m_expression;
+      std::string m_expression;
       std::vector<Element> m_lhs_elements;
       std::vector<Element> m_rhs_elements;
-      std::set<QString> m_variable_names;
+      std::unordered_set<std::string> m_variable_names;
       bool m_is_width_related;
       ComparisonOperator m_comparison_operator;
 
       void parse();
-      std::vector<Constraint::Element> convert_to_rpn(const QString& expression);
+      std::vector<Constraint::Element> convert_to_rpn(const std::string& expression);
   };
 }
 

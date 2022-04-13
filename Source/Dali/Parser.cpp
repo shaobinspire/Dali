@@ -18,7 +18,7 @@ std::shared_ptr<Layout> Parser::parse(const nlohmann::json& m_json) {
   for(auto& item : m_json["layout"]) {
     auto box = new LayoutBox();
     if(item.contains("name")) {
-      box->set_name(QString::fromStdString(item["name"].get<std::string>()));
+      box->set_name(item["name"].get<std::string>());
     }
     box->set_rect({item["x"], item["y"], item["width"], item["height"]});
     if(item.contains("policy")) {
@@ -40,8 +40,7 @@ std::shared_ptr<Layout> Parser::parse(const nlohmann::json& m_json) {
   }
   if(m_json.contains("constraints")) {
     for(auto& expression : m_json["constraints"]) {
-      auto constraint = Constraint(
-        QString::fromStdString(expression.get<std::string>()));
+      auto constraint = Constraint(expression.get<std::string>());
       if(constraint.is_width_related()) {
         layout->add_width_constraint(std::move(constraint));
       } else {

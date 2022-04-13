@@ -25,15 +25,15 @@ namespace Dali {
       SizePolicy get_vertical_size_policy() const;
       void set_vertical_size_policy(SizePolicy policy);
 
-      QString get_name() const;
-      void set_name(const QString& name);
+      std::string get_name() const;
+      void set_name(const std::string& name);
 
       bool is_name_visible() const;
       void set_name_visible(bool is_visible);
 
     private:
       QRect m_rect;
-      QString m_name;
+      std::string m_name;
       SizePolicy m_horizontal_size_policy;
       SizePolicy m_vertical_size_policy;
       bool m_is_name_visible;

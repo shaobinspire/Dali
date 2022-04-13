@@ -94,7 +94,7 @@ void LayoutWidget::paintEvent(QPaintEvent* event) {
         arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height());
       auto name = QString();
       if(box->is_name_visible()) {
-        name = box->get_name();
+        name = QString::fromStdString(box->get_name());
       }
       painter.drawText(rect, Qt::AlignCenter | Qt::TextWordWrap, name + position);
     }
