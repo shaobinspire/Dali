@@ -2,6 +2,7 @@
 #define DALI_MAIN_WINDOW_H
 #include <QLabel>
 #include <QMainWindow>
+#include <QSpinBox>
 #include "Dali/Parser.hpp"
 #include "LayoutViewer/JsonEditor.hpp"
 
@@ -23,12 +24,15 @@ namespace Dali {
       QLabel* m_file_name_label;
       QLabel* m_layout_size_label;
       QLabel* m_size_label;
+      QSpinBox* m_width_spin_box;
+      QSpinBox* m_height_spin_box;
       QAction* m_refresh_action;
       QString m_file_name;
       Parser m_parser;
 
       void create_dock_windows();
       void create_menu();
+      void create_size_setting_tool_bar();
       void open();
       void refresh();
       bool save();

@@ -79,20 +79,42 @@ int get_precedence(const std::string& op) {
 }
 
 std::vector<ExpressionToken> split(const std::string& expression) {
-  auto reg_exp = std::regex("([()+\\-*\\/]|[^()+\\-*\\/]+)");
-  auto tokens = std::vector<std::string>(
-    std::sregex_token_iterator(expression.begin(), expression.end(), reg_exp),
-    std::sregex_token_iterator());
+  //auto start = std::chrono::high_resolution_clock::now();
   auto list = std::vector<ExpressionToken>();
-  auto operator_exp = std::regex("[()+\\-*\\/]");
-  for(auto& token : tokens) {
-    trim(token);
-    if(std::regex_match(token, operator_exp)) {
-      list.push_back({token, true});
-    } else {
-      list.push_back({token, false});
+  auto token_start = expression.begin();
+  for(auto iter = expression.begin(); iter != expression.end(); ++iter) {
+    if(*iter == '(' || *iter == ')' || *iter == '+' || *iter == '-' || *iter == '*' || *iter == '/') {
+      if(token_start != iter) {
+        auto str = std::string(token_start, iter);
+        trim(str);
+        list.push_back({str, false});
+      }
+      list.push_back({std::string(1, *iter), true});
+      token_start = iter + 1;
     }
   }
+  if(token_start != expression.end()) {
+    auto str = std::string(token_start, expression.end());
+    trim(str);
+    list.push_back({str, false});
+  }
+  //auto reg_exp = std::regex("([()+\\-*\\/]|[^()+\\-*\\/]+)");
+  //auto tokens = std::vector<std::string>(
+  //  std::sregex_token_iterator(expression.begin(), expression.end(), reg_exp),
+  //  std::sregex_token_iterator());
+  //auto list = std::vector<ExpressionToken>();
+  //auto operator_exp = std::regex("[()+\\-*\\/]");
+  //for(auto& token : tokens) {
+  //  trim(token);
+  //  if(std::regex_match(token, operator_exp)) {
+  //    list.push_back({token, true});
+  //  } else {
+  //    list.push_back({token, false});
+  //  }
+  //}
+  //auto stop = std::chrono::high_resolution_clock::now();
+  //auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+  //qDebug() << "split time:" << duration.count();
   return list;
 }
 
@@ -129,7 +151,7 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
       },
       [&] (const Constraint::Variable& variable) {
         if(variable.m_name.empty()) {
-          stack.push(context.real_const(layout_name));
+          stack.push(context.real_const(LAYOUT_NAME));
         } else {
           stack.push(context.real_const(variable.m_name.c_str()));
         }
@@ -224,12 +246,13 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& e
 }
 
 void Constraint::parse() {
-  auto reg_exp = std::regex("(=|[<>]=?)");
+  //auto start = std::chrono::high_resolution_clock::now();
+  auto reg_exp = std::regex("(=+|[<>!]=?)");
   auto match = std::smatch();
   if(!std::regex_search(m_expression, match, reg_exp)) {
     return;
   }
-  if(match.str() == "=") {
+  if(match.str().front() == '=') {
     m_comparison_operator = ComparisonOperator::EQUAL_TO;
   } else if(match.str() == "<") {
     m_comparison_operator = ComparisonOperator::LESS_THAN;

@@ -16,12 +16,19 @@ namespace Details {
     public:
       Solver();
 
-      void add_constraints(const Constraints& constraints);
+      void add_const_formula(const z3::expr_vector& formulas);
 
-      std::vector<std::pair<std::string, double>> solve(int value);
+      //void reset();
 
-      int get_min_value();
-      int get_max_value();
+      //std::unordered_map<std::string, double> solve(const Constraints& sum_constraints, int value);
+      //std::unordered_map<std::string, double> solve(const std::vector<z3::expr>& sum_constraints, int value);
+      std::unordered_map<std::string, double> solve(const z3::expr_vector& formulas, int value);
+      double solve_maximum(const z3::expr_vector& formulas);
+      double solve_minimum(const z3::expr_vector& formulas);
+
+      z3::expr declare_variable(const std::string& name);
+
+      z3::context& get_context();
 
     private:
       z3::context m_context;

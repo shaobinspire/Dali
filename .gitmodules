@@ -1,3 +1,6 @@
-[submodule "third-party/valijson"]
-	path = third-party/valijson
+[submodule "third_party/valijson"]
+	path = third_party/valijson
 	url = https://github.com/tristanpenman/valijson
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt

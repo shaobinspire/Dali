@@ -8,7 +8,7 @@ endif(WIN32)
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
-add_library(Library ${header_files} ${source_files})
+add_library(Dali ${header_files} ${source_files})
 
 #if(WIN32)
 #  target_link_libraries(Library
@@ -16,11 +16,13 @@ add_library(Library ${header_files} ${source_files})
 #    optimized ${Z3_LIBRARY_OPTIMIZED_PATH})
 #endif(WIN32)
 
+target_link_libraries(Dali PRIVATE fmt::fmt-header-only)
+
 set_source_files_properties(${header_files} PROPERTIES HEADER_FILE_ONLY TRUE)
-set_target_properties(Library PROPERTIES STATIC_LIBRARY_FLAGS_RELEASE
+set_target_properties(Dali PROPERTIES STATIC_LIBRARY_FLAGS_RELEASE
   "${CMAKE_LIBRARY_FLAGS}" OUTPUT_NAME Spire)
 
-install(TARGETS Library CONFIGURATIONS Debug
+install(TARGETS Dali CONFIGURATIONS Debug
   DESTINATION ${DALI_LIBRARY_INSTALL_DIRECTORY}/Debug)
-install(TARGETS Library CONFIGURATIONS Release
+install(TARGETS Dali CONFIGURATIONS Release
   DESTINATION ${DALI_LIBRARY_INSTALL_DIRECTORY}/Release)

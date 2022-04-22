@@ -2,6 +2,7 @@
 #include "Dali/Constraint.hpp"
 
 using namespace Dali;
+using namespace z3;
 
 void Constraints::add_local_constraint(const Constraint& constraint, bool forced) {
   if(forced) {
@@ -30,6 +31,16 @@ void Constraints::add_global_constraint(const Constraint& constraint) {
   }
 }
 
+expr_vector Constraints::convert(context& context) {
+  auto formulas = expr_vector(context);
+  for(auto& constraint : m_constraints) {
+    if(auto formula = constraint.convert_to_formula(context)) {
+      formulas.push_back(formula);
+    }
+  }
+  return formulas;
+}
+
 int Constraints::get_constraint_count() const {
   return static_cast<int>(m_constraints.size());
 }
@@ -43,4 +54,8 @@ const Constraint& Constraints::get_constraint(int index) const {
 
 bool Constraints::has_varaible_name_in_global(const std::string& name) {
   return m_global_variable_name.contains(name);
+}
+
+void Constraints::clear() {
+  m_constraints.clear();
 }

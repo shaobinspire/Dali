@@ -1,68 +1,75 @@
 #include "Dali/Layout.hpp"
-#include <sstream>
+#include <chrono>
+#include <map>
+#include <fmt/core.h>
 #include "Dali/LayoutBox.hpp"
 
 using namespace Dali;
+using namespace z3;
 
-void build_constraints(const std::vector<LayoutBox*>& boxes, const std::string& property,
-    Constraints& constraints) {
-  auto is_horiztonal = [&] {
-    if(property == "width") {
-      return true;
-    }
-    return false;
-  }();
-  auto get_value = [=] (auto index) {
-    if(is_horiztonal) {
-      return boxes[index]->get_rect().width();
-    } else {
-      return boxes[index]->get_rect().height();
-    }
-  };
-  auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
-  auto sum_expression = std::string();
-  for(auto i = 0; i < static_cast<int>(boxes.size()); ++i) {
-    sum_expression += boxes[i]->get_name() + "." + property + " +";
-    if(is_horiztonal) {
-      if(boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-        auto sstr = std::ostringstream();
-        sstr << boxes[i]->get_name() << "." << property << "=" << get_value(i);
-        constraints.add_local_constraint(Constraint(sstr.str()), true);
-      } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
-        expanding_box_without_constraint.push_back({get_value(i), i});
-      }
-    } else {
-      if(boxes[i]->get_vertical_size_policy() == SizePolicy::Fixed) {
-        auto sstr = std::ostringstream();
-        sstr << boxes[i]->get_name() << "." << property << "=" << get_value(i);
-        constraints.add_local_constraint(Constraint(sstr.str()), true);
-      } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
-        expanding_box_without_constraint.push_back({get_value(i), i});
-      }
-    }
-    auto sstr = std::ostringstream();
-    sstr << boxes[i]->get_name() << "." << property << ">= 0";
-    constraints.add_local_constraint(Constraint(sstr.str()), true);
-  }
-  if(!expanding_box_without_constraint.empty()) {
-    std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
-    for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
-      auto sstr = std::ostringstream();
-      sstr << boxes[iter->second]->get_name() << "." << property << "=" <<
-        boxes[expanding_box_without_constraint.begin()->second]->get_name() <<
-        "." << property << " * " <<
-        static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first;
-      constraints.add_local_constraint(Constraint(sstr.str()), false);
-    }
-  }
-  sum_expression.pop_back();
-  sum_expression += "= width";
-  constraints.add_local_constraint(Constraint(sum_expression), true);
-}
+//void build_constraints(const std::vector<LayoutBox*>& boxes, const std::string& property,
+//    Constraints& constraints) {
+//  auto is_horiztonal = [&] {
+//    if(property == "width") {
+//      return true;
+//    }
+//    return false;
+//  }();
+//  auto get_value = [=] (auto index) {
+//    if(is_horiztonal) {
+//      return boxes[index]->get_rect().width();
+//    } else {
+//      return boxes[index]->get_rect().height();
+//    }
+//  };
+//  auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
+//  auto sum_expression = std::string();
+//  for(auto i = 0; i < static_cast<int>(boxes.size()); ++i) {
+//    sum_expression += boxes[i]->get_name() + "." + property + " +";
+//    if(is_horiztonal) {
+//      if(boxes[i]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+//        auto sstr = std::ostringstream();
+//        sstr << boxes[i]->get_name() << "." << property << "=" << get_value(i);
+//        constraints.add_local_constraint(Constraint(sstr.str()), true);
+//      } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
+//        expanding_box_without_constraint.push_back({get_value(i), i});
+//      }
+//    } else {
+//      if(boxes[i]->get_vertical_size_policy() == SizePolicy::Fixed) {
+//        auto sstr = std::ostringstream();
+//        sstr << boxes[i]->get_name() << "." << property << "=" << get_value(i);
+//        constraints.add_local_constraint(Constraint(sstr.str()), true);
+//      } else if(!constraints.has_varaible_name_in_global(boxes[i]->get_name())) {
+//        expanding_box_without_constraint.push_back({get_value(i), i});
+//      }
+//    }
+//    auto sstr = std::ostringstream();
+//    sstr << boxes[i]->get_name() << "." << property << ">= 0";
+//    constraints.add_local_constraint(Constraint(sstr.str()), true);
+//  }
+//  if(!expanding_box_without_constraint.empty()) { //    std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
+//    for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
+//      auto sstr = std::ostringstream();
+//      sstr << boxes[iter->second]->get_name() << "." << property << "=" <<
+//        boxes[expanding_box_without_constraint.begin()->second]->get_name() <<
+//        "." << property << " * " <<
+//        static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first;
+//      constraints.add_local_constraint(Constraint(sstr.str()), false);
+//    }
+//  }
+//  sum_expression.pop_back();
+//  sum_expression += "= width";
+//  constraints.add_local_constraint(Constraint(sum_expression), true);
+//}
 
 Layout::Layout()
   : m_min_size(0, 0),
-    m_max_size(MAX_LAYOUT_SIZE, MAX_LAYOUT_SIZE) {}
+    m_max_size(MAX_LAYOUT_SIZE, MAX_LAYOUT_SIZE),
+    m_status(Status::NONE),
+    m_min_fixed_box_width(MAX_LAYOUT_SIZE),
+    m_min_fixed_box_height(MAX_LAYOUT_SIZE),
+    m_total_fixed_box_width(0),
+    m_total_fixed_box_height(0) {}
 
 Layout::~Layout() {
   for(auto box : m_boxes) {
@@ -79,14 +86,21 @@ void Layout::set_rect(const QRect& rect) {
 }
 
 void Layout::add_box(LayoutBox* box) {
+  if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
+    m_min_fixed_box_width = std::min(m_min_fixed_box_width, box->get_rect().width());
+    m_total_fixed_box_width += box->get_rect().width();
+  }
   if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
-    m_rect = m_rect.united(box->get_rect());
+    m_min_fixed_box_height = std::min(m_min_fixed_box_height, box->get_rect().height());
+    m_total_fixed_box_height += box->get_rect().height();
+    //m_rect = m_rect.united(box->get_rect());
   }
   if(box->get_name().empty()) {
     box->set_name("DALI_LAYOUT_BOX" + m_boxes.size());
     box->set_name_visible(false);
   }
   m_boxes.push_back(box);
+  //m_box_rects.push_back(box->get_rect());
   m_name_map[box->get_name()] = static_cast<int>(m_boxes.size()) - 1;
   m_min_pos.setX(std::min(m_min_pos.x(), box->get_rect().x()));
   m_min_pos.setY(std::min(m_min_pos.y(), box->get_rect().y()));
@@ -95,11 +109,11 @@ void Layout::add_box(LayoutBox* box) {
 }
 
 void Layout::add_width_constraint(const Constraint& constraint) {
-  m_width_constraints.add_global_constraint(constraint);
+  m_horizontal_constraints.add_global_constraint(constraint);
 }
 
 void Layout::add_height_constraint(const Constraint& constraint) {
-  m_height_constraints.add_global_constraint(constraint);
+  m_vertical_constraints.add_global_constraint(constraint);
 }
 
 int Layout::get_box_count() const {
@@ -113,69 +127,187 @@ LayoutBox* Layout::get_box(int index) const {
   return m_boxes[index];
 }
 
-QSize Layout::get_min_size() const {
+QSize Layout::get_min_size() {
+  //m_min_size.setWidth(m_width_solver.get_min_value());
+  //m_min_size.setHeight(m_height_solver.get_min_value());
   return m_min_size;
 }
 
-QSize Layout::get_max_size() const {
+QSize Layout::get_max_size() {
+  //auto max_width = m_width_solver.get_max_value();
+  //if(max_width == -1) {
+  //  m_max_size.setWidth(m_min_size.width());
+  //} else {
+  //  m_max_size.setWidth(max_width);
+  //}
   return m_max_size;
 }
 
 void Layout::resize(const QSize& size) {
-  if(is_horizontal_one_row()) {
-    auto result = m_width_solver.solve(size.width());
-    for(auto& pos : result) {
-      if(!m_name_map.contains(pos.first)) {
-        continue;
-      }
-      auto index = m_name_map[pos.first];
-      m_boxes[index]->set_size({static_cast<int>(pos.second), size.height()});
-    }
-    for(auto i = 1; i < get_box_count(); ++i) {
-      m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
-    }
-  } else if(is_vertical_one_column()) {
-    auto result = m_height_solver.solve(size.height());
-    for(auto& pos : result) {
-      if(!m_name_map.contains(pos.first)) {
-        continue;
-      }
-      auto index = m_name_map[pos.first];
-      m_boxes[index]->set_size({size.width(), static_cast<int>(pos.second)});
-    }
-    for(auto i = 1; i < get_box_count(); ++i) {
-      m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
-    }
+  auto boxes_rects = std::vector<QRect>();
+  for(auto box : m_boxes) {
+    boxes_rects.push_back(box->get_rect());
   }
-  //resize_width(size.width());
-  //resize_height(size.height());
-  m_rect.setSize(size);
+  auto rows = build_rows(boxes_rects);
+  auto horizontal_formulas = build_horizontal_formulas(rows);
+  auto columns = build_columns(boxes_rects);
+  auto vertical_formulas = build_vertical_formulas(columns);
+  qDebug() << "horizontal:";
+  auto widths = m_horizontal_solver.solve(horizontal_formulas, size.width());
+  qDebug() << "vertical:";
+  auto heights = m_vertical_solver.solve(vertical_formulas, size.height());
+  adjust_horizontal_layout(widths, rows, boxes_rects);
+  adjust_vertical_layout(heights, columns, boxes_rects);
+  m_boxes_rects = boxes_rects;
+  auto area = 0;
+  for(auto i = 0; i < get_box_count(); ++i) {
+    area += boxes_rects[i].width() * boxes_rects[i].height();
+  }
+  auto area2 = (boxes_rects.back().bottom() + 1) * (boxes_rects.back().right() + 1);
+  if(area > area2) {
+    m_status = Status::LAYOUT_OVERFLOW;
+    return;
+  } else if(area < area2) {
+    m_status = Status::LAYOUT_UNDERFLOW;
+    return;
+  }
+  m_status = Status::NONE;
+  for(auto i = 0; i < get_box_count(); ++i) {
+    m_boxes[i]->set_rect(boxes_rects[i]);
+  }
+
+  //qDebug() << size;
+  //static auto start = std::chrono::high_resolution_clock::now();
+  //auto t = std::chrono::high_resolution_clock::now();
+  //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t - start);
+  //qDebug() << "stat: " << start.time_since_epoch().count() << " end:" << t.time_since_epoch().count() << " resize time : " << duration.count() << " " << size;
+  //start = t;
+  //auto start = std::chrono::high_resolution_clock::now();
+  //rebuild_constraints();
+  //if(m_last_size.width() != size.width()) {
+  //  resize_width(size.width());
+  //} else if(m_last_size.height() != size.height()) {
+  //  resize_height(size.height());
+  //}
+  //m_last_size = size;
+  //auto stop = std::chrono::high_resolution_clock::now();
+  //auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+  //qDebug() << "rebuild time:" << duration.count();
+  //start = std::chrono::high_resolution_clock::now();
+  //auto width_result = m_horizontal_solver.solve(size.width());
+  //auto height_result = m_vertical_solver.solve(size.height());
+  //stop = std::chrono::high_resolution_clock::now();
+  //duration = duration_cast<std::chrono::microseconds>(stop - start);
+  //qDebug() << "solve time:" << duration.count();
+  ////start = std::chrono::high_resolution_clock::now();
+  //for(auto& pos : width_result) {
+  //  if(!m_name_map.contains(pos.first)) {
+  //    continue;
+  //  }
+  //  auto index = m_name_map[pos.first];
+  //  if(m_boxes[index]->get_horizontal_size_policy() != SizePolicy::Fixed) {
+  //    m_box_rects[index].setWidth(static_cast<int>(pos.second));
+  //  }
+  //}
+  //if(!width_result.empty()) {
+  //  for(auto& row : m_rows) {
+  //    for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
+  //      auto index = row[i];
+  //      m_box_rects[index].moveLeft(m_box_rects[row[i - 1]].right() + 1);
+  //    }
+  //  }
+  //}
+  //for(auto& pos : height_result) {
+  //  if(!m_name_map.contains(pos.first)) {
+  //    continue;
+  //  }
+  //  auto index = m_name_map[pos.first];
+  //  if(m_boxes[index]->get_vertical_size_policy() != SizePolicy::Fixed) {
+  //    m_box_rects[index].setHeight(static_cast<int>(pos.second));
+  //  }
+  //}
+  //if(!height_result.empty()) {
+  //  for(auto& column : m_columns) {
+  //    for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
+  //      auto index = column[i];
+  //      m_box_rects[index].moveTop(m_box_rects[column[i - 1]].bottom() + 1);
+  //    }
+  //  }
+  //}
+  //auto stop = std::chrono::high_resolution_clock::now();
+  //auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+  //qDebug() << "resize time:" << duration.count();
+  //auto rect = QRect();
+  //auto area = 0;
+  //for(auto i = 0; i < get_box_count(); ++i) {
+  //  area += m_box_rects[i].width() * m_box_rects[i].height();
+  //  rect = rect.united(m_box_rects[i]);
+  //}
+  //auto area3 = rect.width() * rect.height();
+  //auto area2 = (m_box_rects.back().bottom() + 1) * (m_box_rects.back().right() + 1);
+  //if(area > area2) {
+  //  m_status = Status::LAYOUT_OVERFLOW;
+  //  return;
+  //} else if(area < area2) {
+  //  m_status = Status::LAYOUT_UNDERFLOW;
+  //  return;
+  //}
+  //m_status = Status::NONE;
+  //for(auto i = 0; i < get_box_count(); ++i) {
+  //  m_boxes[i]->set_rect(m_box_rects[i]);
+  //}
+  //m_rect.setSize(rect.size());
 }
 
 bool Layout::build() {
+  auto horizontal_expanding_box = std::vector<std::pair<int, int>>();
+  auto vertical_expanding_box = std::vector<std::pair<int, int>>();
   for(auto i = 0; i < get_box_count(); ++i) {
-    if(m_boxes[i]->get_rect().y() == m_min_pos.y()) {
-      m_top_row.push_back(i);
+    auto box = m_boxes[i];
+    if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
+      m_horizontal_constraints.add_local_constraint(Constraint(
+        fmt::format("{}.width = {}", box->get_name(), box->get_rect().width())), true);
+    } else {
+      m_horizontal_constraints.add_local_constraint(Constraint(
+        fmt::format("{}.width >= 0", box->get_name())), true);
+      if(!m_horizontal_constraints.has_varaible_name_in_global(box->get_name())) {
+        horizontal_expanding_box.push_back({box->get_rect().width(), i});
+      }
     }
-    if(m_boxes[i]->get_rect().x() == m_min_pos.x()) {
-      m_left_column.push_back(i);
-    }
-    if(m_boxes[i]->get_rect().bottom() == m_max_pos.y()) {
-      m_bottom_row.push_back(i);
-    }
-    if(m_boxes[i]->get_rect().right() == m_min_pos.x()) {
-      m_right_column.push_back(i);
+    if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
+      m_vertical_constraints.add_local_constraint(Constraint(
+        fmt::format("{}.height = {}", box->get_name(), box->get_rect().height())), true);
+    } else {
+      m_vertical_constraints.add_local_constraint(Constraint(
+       fmt::format("{}.height >= 0", box->get_name())), true);
+      if(!m_vertical_constraints.has_varaible_name_in_global(box->get_name())) {
+        vertical_expanding_box.push_back({box->get_rect().height(), i});
+      }
     }
   }
-  if(is_horizontal_one_row()) {
-    build_constraints(m_boxes, "width", m_width_constraints);
-    m_width_solver.add_constraints(m_width_constraints);
-    calculate_one_row_min_max_size();
-  } else if(is_vertical_one_column()) {
-    build_constraints(m_boxes, "height", m_height_constraints);
-    m_height_solver.add_constraints(m_height_constraints);
-    calculate_one_column_min_max_size();
-  }
+  //if(!horizontal_expanding_box.empty()) {
+  //  std::sort(horizontal_expanding_box.begin(), horizontal_expanding_box.end());
+  //  for(auto iter = horizontal_expanding_box.begin() + 1; iter != horizontal_expanding_box.end(); ++iter) {
+  //    m_horizontal_constraints.add_local_constraint(Constraint(
+  //      fmt::format("{}.width = {}.width * {}", m_boxes[iter->second]->get_name(),
+  //      m_boxes[horizontal_expanding_box.begin()->second]->get_name(),
+  //      static_cast<double>(iter->first) / horizontal_expanding_box.begin()->first)), false);
+  //  }
+  //}
+  //if(!vertical_expanding_box.empty()) {
+  //  std::sort(vertical_expanding_box.begin(), vertical_expanding_box.end());
+  //  for(auto iter = vertical_expanding_box.begin() + 1; iter != vertical_expanding_box.end(); ++iter) {
+  //    m_vertical_constraints.add_local_constraint(Constraint(
+  //      fmt::format("{}.height = {}.height * {}", m_boxes[iter->second]->get_name(),
+  //      m_boxes[vertical_expanding_box.begin()->second]->get_name(),
+  //      static_cast<double>(iter->first) / vertical_expanding_box.begin()->first)), false);
+  //  }
+  //}
+  qDebug() << "horizontal const fromula:";
+  m_horizontal_solver.add_const_formula(m_horizontal_constraints.convert(m_horizontal_solver.get_context()));
+  qDebug() << "vertcial const fromula:";
+  m_vertical_solver.add_const_formula(m_vertical_constraints.convert(m_vertical_solver.get_context()));
+  calculate_min_max_size();
   return true;
 }
 
@@ -186,83 +318,579 @@ int Layout::get_index_by_name(const std::string& name) {
   return -1;
 }
 
-bool Layout::is_horizontal_one_row() const {
-  return m_top_row.size() == get_box_count();
+const std::vector<QRect>& Layout::get_box_rect() const {
+  return m_boxes_rects;
 }
 
-bool Layout::is_vertical_one_column() const {
-  return m_left_column.size() == get_box_count();
+Layout::Status Layout::get_status() const {
+  return m_status;
 }
 
-void Layout::calculate_one_row_min_max_size() {
-  m_min_size.setWidth(m_width_solver.get_min_value());
-  auto min_height = 0;
-  for(auto index : m_top_row) {
-    if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
-      min_height = m_boxes[index]->get_rect().height();
+//bool Layout::is_horizontal_one_row() const {
+//  return m_top_row.size() == get_box_count();
+//}
+//
+//bool Layout::is_vertical_one_column() const {
+//  return m_left_column.size() == get_box_count();
+//}
+//
+//void Layout::calculate_one_row_min_max_size() {
+//  m_min_size.setWidth(m_horizontal_solver.get_min_value());
+//  auto min_height = 0;
+//  for(auto index : m_top_row) {
+//    if(m_boxes[index]->get_vertical_size_policy() == SizePolicy::Fixed) {
+//      min_height = m_boxes[index]->get_rect().height();
+//    }
+//  }
+//  m_min_size.setHeight(min_height);
+//  auto max_width = m_horizontal_solver.get_max_value();
+//  if(max_width == -1) {
+//    m_max_size.setWidth(m_min_size.width());
+//  } else {
+//    m_max_size.setWidth(max_width);
+//  }
+//  if(m_min_size.height() != 0) {
+//    m_max_size.setHeight(m_min_size.height());
+//  }
+//}
+//
+//void Layout::calculate_one_column_min_max_size() {
+//  m_min_size.setHeight(m_vertical_solver.get_min_value());
+//  auto min_width = 0;
+//  for(auto index : m_left_column) {
+//    if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
+//      min_width = m_boxes[index]->get_rect().width();
+//    }
+//  }
+//  m_min_size.setWidth(min_width);
+//  auto max_height = m_horizontal_solver.get_max_value();
+//  if(max_height == -1) {
+//    m_max_size.setHeight(m_min_size.width());
+//  } else {
+//    m_max_size.setHeight(max_height);
+//  }
+//  if(m_min_size.width() != 0) {
+//    m_max_size.setWidth(m_min_size.width());
+//  }
+//}
+
+//void Layout::rebuild_constraints() {
+//  auto rows = std::vector<int>();
+//  auto columns = std::vector<int>();
+//  for(auto i = 0; i < get_box_count(); ++i) {
+//    if(m_box_rect[i].width() != 0) {
+//      columns.push_back(m_box_rect[i].x());
+//    }
+//    if(m_box_rect[i].height() != 0) {
+//      rows.push_back(m_box_rect[i].y());
+//    }
+//  }
+//  std::sort(rows.begin(), rows.end());
+//  std::sort(columns.begin(), columns.end());
+//  rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
+//  columns.erase(std::unique(columns.begin(), columns.end()), columns.end());
+//  auto rows = std::vector<std::vector<int>>();
+//  auto columns = std::vector<std::vector<int>>();
+//  rows.resize(rows.size());
+//  columns.resize(columns.size());
+//  for(auto i = 0; i < get_box_count(); ++i) {
+//    auto rect = m_box_rect[i];
+//    for(auto j = 0; j != static_cast<int>(columns.size()); ++j) {
+//      auto x = columns[j];
+//      if(rect.width() != 0 && (x >= rect.x() && x < rect.right() ||
+//          x == rect.x() && rect.width() == 0)) {
+//        m_columns[j].push_back(i);
+//      } else if(x > rect.right()) {
+//        break;
+//      }
+//    }
+//    for(auto j = 0; j != static_cast<int>(rows.size()); ++j) {
+//      auto y = rows[j];
+//      if(rect.height() != 0 && (y >= rect.y() && y < rect.bottom() ||
+//          y == rect.y() && rect.height() == 0)) {
+//        m_rows[j].push_back(i);
+//      } else if(y > rect.bottom()) {
+//        break;
+//      }
+//    }
+//  }
+//  auto m_width_sum_formula = expr_vector(m_horizontal_solver.get_context());
+//  //auto start = std::chrono::high_resolution_clock::now();
+//  for(auto& row : m_rows) {
+//    if(!row.empty()) {
+//      std::sort(row.begin(), row.end(), [=] (int a, int b) {
+//        return m_boxes[a]->get_rect().x() < m_boxes[b]->get_rect().x();
+//      });
+//      auto formula = m_horizontal_solver.declare_variable(m_boxes[row[0]]->get_name());
+//      for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
+//        formula = formula + m_horizontal_solver.declare_variable(m_boxes[row[i]]->get_name());
+//      }
+//      m_width_sum_formula.push_back(formula == m_horizontal_solver.declare_variable(LAYOUT_NAME));
+//    }
+//  }
+//  m_horizontal_solver.add_varying_formula(m_width_sum_formula);
+//  //auto stop = std::chrono::high_resolution_clock::now();
+//  //auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+//  //qDebug() << "build constraints time:" << duration.count();
+//  auto m_height_sum_formula = expr_vector(m_vertical_solver.get_context());
+//  for(auto& column : m_columns) {
+//    if(!column.empty()) {
+//      std::sort(column.begin(), column.end(), [=] (int a, int b) {
+//        return m_boxes[a]->get_rect().y() < m_boxes[b]->get_rect().y();
+//      });
+//      auto formula = m_vertical_solver.declare_variable(m_boxes[column[0]]->get_name());
+//      for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
+//        formula = formula + m_vertical_solver.declare_variable(m_boxes[column[i]]->get_name());
+//      }
+//      m_height_sum_formula.push_back(formula == m_vertical_solver.declare_variable(LAYOUT_NAME));
+//    }
+//  }
+//  m_vertical_solver.add_varying_formula(m_height_sum_formula);
+//}
+
+//void Layout::rebuild_constraints(bool is_horizontal, Solver& solver, std::vector<std::vector<int>>& row_or_column) {
+//  auto list = std::vector<int>();
+//  for(auto i = 0; i < static_cast<int>(m_boxes.size()); ++i) {
+//    if(is_horizontal) {
+//      if(m_boxes[i]->get_rect().height() != 0) {
+//        list.push_back(m_boxes[i]->get_pos().y());
+//      }
+//    } else {
+//      if(m_boxes[i]->get_rect().width() != 0) {
+//        list.push_back(m_boxes[i]->get_pos().x());
+//      }
+//    }
+//  }
+//  std::sort(list.begin(), list.end());
+//  list.erase(std::unique(list.begin(), list.end()), list.end());
+//  row_or_column.resize(list.size());
+//  for(auto i = 0; i < static_cast<int>(m_boxes.size()); ++i) {
+//    auto box = m_boxes[i];
+//    for(auto j = 0; j != static_cast<int>(list.size()); ++j) {
+//      auto value = list[j];
+//      if(is_horizontal) {
+//        if(box->get_rect().height() != 0 &&
+//          (value >= box->get_rect().y() && value < box->get_rect().bottom() ||
+//          value == box->get_rect().y() && box->get_rect().height() == 0)) {
+//          row_or_column[j].push_back(i);
+//        } else if(value > box->get_rect().bottom()) {
+//          break;
+//        }
+//      } else {
+//        if(box->get_rect().width() != 0 &&
+//          (value >= box->get_rect().x() && value < box->get_rect().right() ||
+//          value == box->get_rect().x() && box->get_rect().width() == 0)) {
+//          row_or_column[j].push_back(i);
+//        } else if(value > box->get_rect().right()) {
+//          break;
+//        }
+//      }
+//    }
+//  }
+//  auto sum_formula = expr_vector(solver.get_context());
+//  for(auto& v : row_or_column) {
+//    if(!v.empty()) {
+//      std::sort(v.begin(), v.end(), [&] (int a, int b) {
+//        return m_boxes[a]->get_rect().x() < m_boxes[b]->get_rect().x();
+//      });
+//      auto formula = solver.declare_variable(m_boxes[v[0]]->get_name());
+//      for(auto i = 1; i < static_cast<int>(v.size()); ++i) {
+//        formula = formula + solver.declare_variable(m_boxes[v[i]]->get_name());
+//      }
+//      sum_formula.push_back(formula == solver.declare_variable(LAYOUT_NAME));
+//    }
+//  }
+//  solver.add_varying_formula(sum_formula);
+//}
+//
+//void Layout::rebuild_horizontal_constraints() {
+//  m_rows.clear();
+//  rebuild_constraints(true, m_horizontal_solver, m_rows);
+//  //auto rows = std::vector<int>();
+//  //auto columns = std::vector<int>();
+//  //for(auto i = 0; i < get_box_count(); ++i) {
+//  //  if(m_boxes[i]->get_rect().width() != 0) {
+//  //    columns.push_back(m_boxes[i]->get_pos().x());
+//  //  }
+//  //  if(m_boxes[i]->get_rect().height() != 0) {
+//  //    rows.push_back(m_boxes[i]->get_pos().y());
+//  //  }
+//  //}
+//  //std::sort(rows.begin(), rows.end());
+//  //std::sort(columns.begin(), columns.end());
+//  //rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
+//  //columns.erase(std::unique(columns.begin(), columns.end()), columns.end());
+//  //m_rows.clear();
+//  //m_columns.clear();
+//  //m_rows.resize(rows.size());
+//  //m_columns.resize(columns.size());
+//  //for(auto i = 0; i < get_box_count(); ++i) {
+//  //  auto box = m_boxes[i];
+//  //  for(auto j = 0; j != static_cast<int>(columns.size()); ++j) {
+//  //    auto x = columns[j];
+//  //    if(box->get_rect().width() != 0 &&
+//  //        (x >= box->get_rect().x() && x < box->get_rect().right() ||
+//  //        x == box->get_rect().x() && box->get_rect().width() == 0)) {
+//  //      m_columns[j].push_back(i);
+//  //    } else if(x > box->get_rect().right()) {
+//  //      break;
+//  //    }
+//  //  }
+//  //  for(auto j = 0; j != static_cast<int>(rows.size()); ++j) {
+//  //    auto y = rows[j];
+//  //    if(box->get_rect().height() != 0 &&
+//  //        (y >= box->get_rect().y() && y < box->get_rect().bottom() ||
+//  //        y == box->get_rect().y() && box->get_rect().height() == 0)) {
+//  //      m_rows[j].push_back(i);
+//  //    } else if(y > box->get_rect().bottom()) {
+//  //      break;
+//  //    }
+//  //  }
+//  //}
+//  //auto m_width_sum_formula = expr_vector(m_horizontal_solver.get_context());
+//  ////auto start = std::chrono::high_resolution_clock::now();
+//  //for(auto& row : m_rows) {
+//  //  if(!row.empty()) {
+//  //    std::sort(row.begin(), row.end(), [=] (int a, int b) {
+//  //      return m_boxes[a]->get_rect().x() < m_boxes[b]->get_rect().x();
+//  //    });
+//  //    auto formula = m_horizontal_solver.declare_variable(m_boxes[row[0]]->get_name());
+//  //    for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
+//  //      formula = formula + m_horizontal_solver.declare_variable(m_boxes[row[i]]->get_name());
+//  //    }
+//  //    m_width_sum_formula.push_back(formula == m_horizontal_solver.declare_variable(LAYOUT_NAME));
+//  //  }
+//  //}
+//  //m_horizontal_solver.add_varying_formula(m_width_sum_formula);
+//  ////auto stop = std::chrono::high_resolution_clock::now();
+//  ////auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+//  ////qDebug() << "build constraints time:" << duration.count();
+//  //auto m_height_sum_formula = expr_vector(m_vertical_solver.get_context());
+//  //for(auto& column : m_columns) {
+//  //  if(!column.empty()) {
+//  //    std::sort(column.begin(), column.end(), [=] (int a, int b) {
+//  //      return m_boxes[a]->get_rect().y() < m_boxes[b]->get_rect().y();
+//  //    });
+//  //    auto formula = m_vertical_solver.declare_variable(m_boxes[column[0]]->get_name());
+//  //    for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
+//  //      formula = formula + m_vertical_solver.declare_variable(m_boxes[column[i]]->get_name());
+//  //    }
+//  //    m_height_sum_formula.push_back(formula == m_vertical_solver.declare_variable(LAYOUT_NAME));
+//  //  }
+//  //}
+//  //m_vertical_solver.add_varying_formula(m_height_sum_formula);
+//}
+//
+//void Layout::rebuild_vertical_constraints() {
+//  m_columns.clear();
+//  rebuild_constraints(false, m_vertical_solver, m_columns);
+//}
+//
+//void Layout::resize_width(int width) {
+//  auto start = std::chrono::high_resolution_clock::now();
+//  rebuild_horizontal_constraints();
+//  auto width_result = m_horizontal_solver.solve(width);
+//  for(auto& pos : width_result) {
+//    if(!m_name_map.contains(pos.first)) {
+//      continue;
+//    }
+//    auto index = m_name_map[pos.first];
+//    if(m_boxes[index]->get_horizontal_size_policy() != SizePolicy::Fixed) {
+//      m_box_rects[index].setWidth(static_cast<int>(pos.second));
+//    }
+//  }
+//  if(!width_result.empty()) {
+//    for(auto& row : m_rows) {
+//      for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
+//        auto index = row[i];
+//        m_box_rects[index].moveLeft(m_box_rects[row[i - 1]].right() + 1);
+//      }
+//    }
+//  }
+//  auto stop = std::chrono::high_resolution_clock::now();
+//  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+//  qDebug() << "resize width time:" << duration.count();
+//}
+//
+//void Layout::resize_height(int height) {
+//  auto start = std::chrono::high_resolution_clock::now();
+//  rebuild_vertical_constraints();
+//  auto height_result = m_vertical_solver.solve(height);
+//  for(auto& pos : height_result) {
+//    if(!m_name_map.contains(pos.first)) {
+//      continue;
+//    }
+//    auto index = m_name_map[pos.first];
+//    if(m_boxes[index]->get_vertical_size_policy() != SizePolicy::Fixed) {
+//      m_box_rects[index].setHeight(static_cast<int>(pos.second));
+//    }
+//  }
+//  if(!height_result.empty()) {
+//    for(auto& column : m_columns) {
+//      for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
+//        auto index = column[i];
+//        m_box_rects[index].moveTop(m_box_rects[column[i - 1]].bottom() + 1);
+//      }
+//    }
+//  }
+//  auto stop = std::chrono::high_resolution_clock::now();
+//  auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+//  qDebug() << "resize height time:" << duration.count();
+//}
+
+void Layout::build_constraints(const std::vector<int>& range,
+  const std::string& property, Constraints& constraints) {
+  //auto is_horiztonal = [&] {
+  //  if(property == "width") {
+  //    return true;
+  //  }
+  //  return false;
+  //}();
+  //auto get_value = [=] (auto index) {
+  //  if(is_horiztonal) {
+  //    return m_boxes[index]->get_rect().width();
+  //  } else {
+  //    return m_boxes[index]->get_rect().height();
+  //  }
+  //};
+  //auto expanding_box_without_constraint = std::vector<std::pair<int, int>>();
+  auto sum_expression = std::string();
+  for(auto i : range) {
+    auto box = m_boxes[i];
+    sum_expression += box->get_name() + "." + property + " +";
+    //if(is_horiztonal) {
+    //  if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
+    //    auto sstr = std::ostringstream();
+    //    sstr << box->get_name() << "." << property << "=" << get_value(i);
+    //    constraints.add_local_constraint(Constraint(sstr.str()), true);
+    //  } else if(!constraints.has_varaible_name_in_global(box->get_name()) && get_value(i) != 0) {
+    //    expanding_box_without_constraint.push_back({get_value(i), i});
+    //  }
+    //} else {
+    //  if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
+    //    auto sstr = std::ostringstream();
+    //    sstr << box->get_name() << "." << property << "=" << get_value(i);
+    //    constraints.add_local_constraint(Constraint(sstr.str()), true);
+    //  } else if(!constraints.has_varaible_name_in_global(box->get_name()) && get_value(i) != 0) {
+    //    expanding_box_without_constraint.push_back({get_value(i), i});
+    //  }
+    //}
+    //auto sstr = std::ostringstream();
+    //sstr << box->get_name() << "." << property << ">= 0";
+    //constraints.add_local_constraint(Constraint(sstr.str()), true);
+  }
+  //if(!expanding_box_without_constraint.empty()) {
+  //  std::sort(expanding_box_without_constraint.begin(), expanding_box_without_constraint.end());
+  //  for(auto iter = expanding_box_without_constraint.begin() + 1; iter != expanding_box_without_constraint.end(); ++iter) {
+  //    auto sstr = std::ostringstream();
+  //    sstr << m_boxes[iter->second]->get_name() << "." << property << "=" <<
+  //      m_boxes[expanding_box_without_constraint.begin()->second]->get_name() <<
+  //      "." << property << " * " <<
+  //      static_cast<double>(iter->first) / expanding_box_without_constraint.begin()->first;
+  //    constraints.add_local_constraint(Constraint(sstr.str()), false);
+  //  }
+  //}
+  sum_expression.pop_back();
+  sum_expression += " = " + property;
+  //auto start = std::chrono::high_resolution_clock::now();
+  constraints.add_local_constraint(Constraint(sum_expression), true);
+  //auto stop = std::chrono::high_resolution_clock::now();
+  //auto duration = duration_cast<std::chrono::microseconds>(stop - start);
+  //qDebug() << "add local constraint time:" << duration.count();
+}
+
+void Layout::adjust_horizontal_layout(
+    const std::unordered_map<std::string, double>& boxes_widths,
+    const std::vector<std::vector<int>>& rows, std::vector<QRect>& boxes_rects) {
+  for(auto& box : boxes_widths) {
+    if(!m_name_map.contains(box.first)) {
+      continue;
     }
+    boxes_rects[m_name_map[box.first]].setWidth(static_cast<int>(box.second));
   }
-  m_min_size.setHeight(min_height);
-  auto max_width = m_width_solver.get_max_value();
-  if(max_width == -1) {
-    m_max_size.setWidth(m_min_size.width());
-  } else {
-    m_max_size.setWidth(max_width);
-  }
-  if(m_min_size.height() != 0) {
-    m_max_size.setHeight(m_min_size.height());
-  }
-}
-
-void Layout::calculate_one_column_min_max_size() {
-  m_min_size.setHeight(m_height_solver.get_min_value());
-  auto min_width = 0;
-  for(auto index : m_left_column) {
-    if(m_boxes[index]->get_horizontal_size_policy() == SizePolicy::Fixed) {
-      min_width = m_boxes[index]->get_rect().width();
-    }
-  }
-  m_min_size.setWidth(min_width);
-  auto max_height = m_width_solver.get_max_value();
-  if(max_height == -1) {
-    m_max_size.setHeight(m_min_size.width());
-  } else {
-    m_max_size.setHeight(max_height);
-  }
-  if(m_min_size.width() != 0) {
-    m_max_size.setWidth(m_min_size.width());
-  }
-}
-
-void Layout::resize_width(int width) {
-  if(is_horizontal_one_row()) {
-    auto result = m_width_solver.solve(width);
-    for(auto& pos : result) {
-      if(!m_name_map.contains(pos.first)) {
-        continue;
+  if(!boxes_widths.empty()) {
+    qDebug() << "adjust row:";
+    for(auto& row : rows) {
+      auto debug = qDebug();
+      debug << row[0] << " " << boxes_rects[row[0]] << ";";
+      for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
+        boxes_rects[row[i]].moveLeft(boxes_rects[row[i - 1]].right() + 1);
+        debug << row[i] << " " << boxes_rects[row[i]] << ";";
       }
-      auto index = m_name_map[pos.first];
-      m_boxes[index]->set_size({static_cast<int>(pos.second), m_boxes[index]->get_rect().height()});
-    }
-    for(auto i = 1; i < get_box_count(); ++i) {
-      m_boxes[i]->set_pos({m_boxes[i - 1]->get_rect().right() + 1, m_boxes[i]->get_rect().y()});
     }
   }
 }
 
-void Layout::resize_height(int height) {
-  if(is_vertical_one_column()) {
-    auto result = m_height_solver.solve(height);
-    for(auto& pos : result) {
-      if(!m_name_map.contains(pos.first)) {
-        continue;
+void Layout::adjust_vertical_layout(
+    const std::unordered_map<std::string, double>& boxes_heights,
+    const std::vector<std::vector<int>>& columns,
+    std::vector<QRect>& boxes_rects) {
+  for(auto& box : boxes_heights) {
+    if(!m_name_map.contains(box.first)) {
+      continue;
+    }
+    boxes_rects[m_name_map[box.first]].setHeight(static_cast<int>(box.second));
+  }
+  if(!boxes_heights.empty()) {
+    qDebug() << "adjust column:";
+    for(auto& column : columns) {
+      auto debug = qDebug();
+      debug << column[0] << " " << boxes_rects[column[0]] << ";";
+      for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
+        boxes_rects[column[i]].moveTop(boxes_rects[column[i - 1]].bottom() + 1);
+        debug << column[i] << " " << boxes_rects[column[i]] << ";";
       }
-      auto index = m_name_map[pos.first];
-      m_boxes[index]->set_size({m_boxes[index]->get_rect().width(), static_cast<int>(pos.second)});
-    }
-    for(auto i = 1; i < get_box_count(); ++i) {
-      m_boxes[i]->set_pos({m_boxes[i]->get_rect().x(), m_boxes[i - 1]->get_rect().bottom() + 1});
     }
   }
 }
 
+std::vector<std::vector<int>> Layout::build_rows(
+    const std::vector<QRect>& boxes_rects) {
+  auto size = static_cast<int>(boxes_rects.size());
+  auto vertical_list = std::vector<int>();
+  for(auto i = 0; i < size; ++i) {
+    if(boxes_rects[i].height() != 0) {
+      vertical_list.push_back(boxes_rects[i].y());
+    }
+  }
+  std::sort(vertical_list.begin(), vertical_list.end());
+  vertical_list.erase(std::unique(vertical_list.begin(), vertical_list.end()),
+    vertical_list.end());
+  auto rows = std::vector<std::vector<int>>(vertical_list.size());
+  for(auto i = 0; i < size; ++i) {
+    const auto& rect = boxes_rects[i];
+    for(auto j = 0; j != static_cast<int>(vertical_list.size()); ++j) {
+      auto y = vertical_list[j];
+      if(rect.height() != 0 && y >= rect.y() && y <= rect.bottom()) {
+        rows[j].push_back(i);
+      } else if(y > rect.bottom()) {
+        break;
+      }
+    }
+  }
+  for(auto& row : rows) {
+    if(!row.empty()) {
+      std::sort(row.begin(), row.end(), [&] (int a, int b) {
+        return boxes_rects[a].x() < boxes_rects[b].x();
+      });
+    }
+  }
+  return rows;
+}
+
+std::vector<std::vector<int>> Layout::build_columns(
+    const std::vector<QRect>& boxes_rects) {
+  auto size = static_cast<int>(boxes_rects.size());
+  auto horizontal_list = std::vector<int>();
+  for(auto i = 0; i < size; ++i) {
+    if(boxes_rects[i].width() != 0) {
+      horizontal_list.push_back(boxes_rects[i].x());
+    }
+  }
+  std::sort(horizontal_list.begin(), horizontal_list.end());
+  horizontal_list.erase(
+    std::unique(horizontal_list.begin(), horizontal_list.end()),
+    horizontal_list.end());
+  auto columns = std::vector<std::vector<int>>(horizontal_list.size());
+  for(auto i = 0; i < size; ++i) {
+    const auto& rect = boxes_rects[i];
+    for(auto j = 0; j != static_cast<int>(horizontal_list.size()); ++j) {
+      auto x = horizontal_list[j];
+      if(rect.width() != 0 && x >= rect.x() && x <= rect.right()) {
+        columns[j].push_back(i);
+      } else if(x > rect.right()) {
+        break;
+      }
+    }
+  }
+  for(auto& column : columns) {
+    if(!column.empty()) {
+      std::sort(column.begin(), column.end(), [&] (int a, int b) {
+        return boxes_rects[a].y() < boxes_rects[b].y();
+      });
+    }
+  }
+  return columns;
+}
+
+expr_vector Layout::build_horizontal_formulas(const std::vector<std::vector<int>>& rows) {
+  auto formulas = expr_vector(m_horizontal_solver.get_context());
+  for(auto& row : rows) {
+    if(!row.empty()) {
+      auto formula = m_horizontal_solver.declare_variable(m_boxes[row[0]]->get_name());
+      for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
+        formula = formula + m_horizontal_solver.declare_variable(m_boxes[row[i]]->get_name());
+      }
+      formulas.push_back(formula == m_horizontal_solver.declare_variable(LAYOUT_NAME));
+    }
+  }
+  return formulas;
+}
+
+z3::expr_vector Layout::build_vertical_formulas(const std::vector<std::vector<int>>& columns) {
+  auto formulas = expr_vector(m_vertical_solver.get_context());
+  for(auto& column : columns) {
+    auto formula = m_vertical_solver.declare_variable(m_boxes[column[0]]->get_name());
+    for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
+      formula = formula + m_vertical_solver.declare_variable(m_boxes[column[i]]->get_name());
+    }
+    formulas.push_back(formula == m_vertical_solver.declare_variable(LAYOUT_NAME));
+  }
+  return formulas;
+}
+
+void Layout::calculate_min_max_size() {
+  auto boxes_rects = std::vector<QRect>();
+  for(auto box : m_boxes) {
+    boxes_rects.push_back(box->get_rect());
+  }
+  {
+    auto rows = build_rows(boxes_rects);
+    auto horizontal_formulas = build_horizontal_formulas(rows);
+    auto columns = build_columns(boxes_rects);
+    auto vertical_formulas = build_vertical_formulas(columns);
+    //auto min_width = m_horizontal_solver.solve_minimum(horizontal_formulas);
+    //auto min_height = m_vertical_solver.solve_minimum(vertical_formulas);
+    auto min_width = MAX_LAYOUT_SIZE;
+    auto max_width = -1;
+    auto new_boxes_rects = boxes_rects;
+    for(auto height = m_min_fixed_box_height; height <= m_total_fixed_box_height; height += m_min_fixed_box_height) {
+      auto result = m_vertical_solver.solve(vertical_formulas, height);
+      adjust_vertical_layout(result, columns, new_boxes_rects);
+      auto new_horizontal_formulas = build_horizontal_formulas(build_rows(new_boxes_rects));
+      auto new_min_width = static_cast<int>(m_horizontal_solver.solve_minimum(new_horizontal_formulas));
+      auto new_max_width = static_cast<int>(m_horizontal_solver.solve_maximum(new_horizontal_formulas));
+      min_width = std::min(min_width, new_min_width);
+      max_width = std::max(max_width, new_max_width);
+      columns = build_columns(new_boxes_rects);
+      vertical_formulas = build_vertical_formulas(columns);
+    }
+    m_min_size.setWidth(min_width);
+    if(max_width == -1) {
+      m_max_size.setWidth(min_width);
+    } else {
+      m_max_size.setWidth(max_width);
+    }
+    auto min_height = MAX_LAYOUT_SIZE;
+    auto max_height = -1;
+    new_boxes_rects = boxes_rects;
+    for(auto width = m_min_fixed_box_width; width <= m_total_fixed_box_width; width += m_min_fixed_box_width) {
+      auto result = m_horizontal_solver.solve(horizontal_formulas, width);
+      adjust_horizontal_layout(result, rows, new_boxes_rects);
+      auto new_vertical_formulas = build_vertical_formulas(build_columns(new_boxes_rects));
+      auto new_min_height = static_cast<int>(m_vertical_solver.solve_minimum(new_vertical_formulas));
+      auto new_max_height = static_cast<int>(m_vertical_solver.solve_maximum(new_vertical_formulas));
+      min_height = std::min(min_height, new_min_height);
+      max_height = std::max(max_height, new_max_height);
+      rows = build_rows(new_boxes_rects);
+      horizontal_formulas = build_horizontal_formulas(rows);
+    }
+    m_min_size.setHeight(min_height);
+    if(max_height == -1) {
+      m_max_size.setHeight(min_height);
+    } else {
+      m_max_size.setHeight(max_height);
+    }
+  }
+
+}

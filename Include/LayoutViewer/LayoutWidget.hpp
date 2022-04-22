@@ -3,6 +3,7 @@
 #include <QWidget>
 #include "nlohmann/json.hpp"
 #include "Dali/Dali.hpp"
+#include "Dali/Layout.hpp"
 
 namespace Dali {
 
@@ -18,6 +19,10 @@ namespace Dali {
       //void update_size(const QSize& size);
 
       bool has_valid_layout() const;
+
+      QRect get_layout_rect() const;
+      
+      Layout::Status get_layout_status() const;
 
     protected:
       void resizeEvent(QResizeEvent* event) override;

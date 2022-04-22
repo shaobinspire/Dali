@@ -10,7 +10,9 @@
 #include <QSaveFile>
 #include <QScreen>
 #include <QStatusBar>
+#include <QTextStream>
 #include <QToolBar>
+#include "Dali/Layout.hpp"
 #include "LayoutViewer/LayoutWidget.hpp"
 
 using namespace Dali;
@@ -18,13 +20,16 @@ using namespace Dali;
 MainWindow::MainWindow() {
   auto central_widget = new QWidget(this);
   central_widget->setStyleSheet("background-color: #F1F1F1;");
+  //central_widget->setStyleSheet("background-color: red;");
   central_widget->installEventFilter(this);
   auto layout = new QHBoxLayout(central_widget);
   m_layout_widget = new LayoutWidget();
+  //m_layout_widget->setStyleSheet("background-color: green;");
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
   create_dock_windows();
+  create_size_setting_tool_bar();
   m_file_name_label = new QLabel();
   statusBar()->addWidget(m_file_name_label);
   m_layout_size_label = new QLabel();
@@ -49,6 +54,18 @@ MainWindow::MainWindow() {
 bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
   if(watched == centralWidget() && event->type() == QEvent::Resize) {
     update_layout_size_message();
+    if(auto status = m_layout_widget->get_layout_status();
+        status != Layout::Status::NONE) {
+      auto message = QString("The layout is %1.");
+      if(status == Layout::Status::LAYOUT_OVERFLOW) {
+        message = message.arg("overflow");
+      } else {
+        message = message.arg("underflow");
+      }
+      m_error_output->setText(message);
+    } else if(!m_error_output->toPlainText().isEmpty()) {
+      m_error_output->clear();
+    }
   }
   return QWidget::eventFilter(watched, event);
 }
@@ -105,6 +122,28 @@ void MainWindow::create_menu() {
   m_view_menu = menuBar()->addMenu(tr("&View"));
 }
 
+void MainWindow::create_size_setting_tool_bar() {
+  auto size_setting_tool_bar = addToolBar(tr("Size"));
+  size_setting_tool_bar->setAllowedAreas(Qt::TopToolBarArea);
+  size_setting_tool_bar->addWidget(new QLabel(tr("Width:")));
+  m_width_spin_box = new QSpinBox();
+  m_width_spin_box->setRange(0, MAX_LAYOUT_SIZE);
+  connect(m_width_spin_box, QOverload<int>::of(&QSpinBox::valueChanged),
+    [=] (auto value) {
+      m_layout_widget->resize(QSize(value, m_layout_widget->size().height()));
+    });
+  size_setting_tool_bar->addWidget(m_width_spin_box);
+  size_setting_tool_bar->addWidget(new QLabel(("  ")));
+  size_setting_tool_bar->addWidget(new QLabel(tr("Height:")));
+  m_height_spin_box = new QSpinBox();
+  m_height_spin_box->setRange(0, MAX_LAYOUT_SIZE);
+  connect(m_height_spin_box, QOverload<int>::of(&QSpinBox::valueChanged),
+    [=] (auto value) {
+      m_layout_widget->resize(QSize(m_layout_widget->size().width(), value));
+    });
+  size_setting_tool_bar->addWidget(m_height_spin_box);
+}
+
 void MainWindow::open() {
   if(!maybe_save()) {
     return;
@@ -118,7 +157,9 @@ void MainWindow::open() {
   m_file_name_label->setText(m_file_name.split("/").back());
 }
 
-void MainWindow::refresh() {}
+void MainWindow::refresh() {
+  m_editor->load_json(m_file_name);
+}
 
 bool MainWindow::save() {
   if(m_file_name.isEmpty()) {
@@ -181,17 +222,19 @@ bool MainWindow::maybe_save() {
 
 void MainWindow::parse_result(bool is_failed) {
   if(is_failed) {
+    m_refresh_action->setEnabled(false);
     m_error_output->setText(QString::fromStdString(m_editor->get_errors()));
     m_layout_widget->set_layout(nullptr);
     m_layout_size_label->setText("");
     m_size_label->setText("");
   } else {
+    m_refresh_action->setEnabled(true);
     m_error_output->setText("");
     auto layout = m_parser.parse(m_editor->get_json());
-    auto cs = centralWidget()->size();
-    auto ls = m_layout_widget->size();
-    m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(
-      centralWidget()->layout()->contentsMargins()));
+    //m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(
+    //  centralWidget()->layout()->contentsMargins()));
+    auto p = m_layout_widget->pos();
+    auto m = centralWidget()->layout()->contentsMargins();
     m_layout_widget->set_layout(layout);
     update_layout_size_message();
     auto min_size = m_layout_widget->get_min_size();
@@ -203,6 +246,9 @@ void MainWindow::parse_result(bool is_failed) {
 }
 
 void MainWindow::update_layout_size_message() {
+  auto rect = m_layout_widget->get_layout_rect();
   m_layout_size_label->setText(QString("Layout Size: %1x%2    ")
-    .arg(m_layout_widget->width()).arg(m_layout_widget->height()));
+    .arg(rect.width()).arg(rect.height()));
+  m_width_spin_box->setValue(rect.width());
+  m_height_spin_box->setValue(rect.height());
 }

@@ -5,7 +5,7 @@
 #endif
 
 namespace Dali {
-  const auto layout_name = "layout";
+  const auto LAYOUT_NAME = "layout";
 
   const auto MAX_LAYOUT_SIZE = (1 << 24) - 1;
 
