@@ -116,6 +116,10 @@ void Layout::add_height_constraint(const Constraint& constraint) {
   m_vertical_constraints.add_global_constraint(constraint);
 }
 
+void Layout::add_position_constraint(const Constraint& constraint) {
+  m_position_constraints.add_local_constraint(constraint, true);
+}
+
 int Layout::get_box_count() const {
   return static_cast<int>(m_boxes.size());
 }
@@ -158,6 +162,17 @@ void Layout::resize(const QSize& size) {
   qDebug() << "vertical:";
   auto heights = m_vertical_solver.solve(vertical_formulas, size.height());
   adjust_vertical_layout(heights, columns, boxes_rects);
+  auto formulas = expr_vector(m_position_solver.get_context());
+  for(auto i = 0; i < m_position_constraints.get_constraint_count(); ++i) {
+    auto formula = set_position_variable_value(boxes_rects, m_position_constraints.get_constraint(i).get_variables());
+    for(auto iter = formula.begin(); iter != formula.end(); ++iter) {
+      formulas.push_back(*iter);
+    }
+  }
+  if(!m_position_solver.check(formulas)) {
+    m_status = Status::NONE;
+    return;
+  }
   //{
   //  auto rows = build_rows(boxes_rects);
   //  auto horizontal_formulas = build_horizontal_formulas(rows);
@@ -272,6 +287,7 @@ void Layout::resize(const QSize& size) {
 }
 
 bool Layout::build() {
+  m_position_solver.add_const_formula(m_position_constraints.convert(m_position_solver.get_context()));
   auto horizontal_expanding_box = std::vector<std::pair<int, int>>();
   auto vertical_expanding_box = std::vector<std::pair<int, int>>();
   for(auto i = 0; i < get_box_count(); ++i) {
@@ -715,10 +731,11 @@ void Layout::adjust_horizontal_layout(
     const std::unordered_map<std::string, double>& boxes_widths,
     const std::vector<std::vector<int>>& rows, std::vector<QRect>& boxes_rects) {
   for(auto& box : boxes_widths) {
-    if(!m_name_map.contains(box.first)) {
+    auto name = box.first.substr(0, box.first.find_first_of('.'));
+    if(!m_name_map.contains(name)) {
       continue;
     }
-    boxes_rects[m_name_map[box.first]].setWidth(static_cast<int>(box.second));
+    boxes_rects[m_name_map[name]].setWidth(static_cast<int>(box.second));
   }
   if(!boxes_widths.empty()) {
     qDebug() << "adjust row:";
@@ -738,10 +755,11 @@ void Layout::adjust_vertical_layout(
     const std::vector<std::vector<int>>& columns,
     std::vector<QRect>& boxes_rects) {
   for(auto& box : boxes_heights) {
-    if(!m_name_map.contains(box.first)) {
+    auto name = box.first.substr(0, box.first.find_first_of('.'));
+    if(!m_name_map.contains(name)) {
       continue;
     }
-    boxes_rects[m_name_map[box.first]].setHeight(static_cast<int>(box.second));
+    boxes_rects[m_name_map[name]].setHeight(static_cast<int>(box.second));
   }
   if(!boxes_heights.empty()) {
     qDebug() << "adjust column:";
@@ -961,9 +979,9 @@ expr_vector Layout::build_horizontal_formulas(const std::vector<std::vector<int>
     if(row.empty()) {
       continue;
     }
-    auto formula = m_horizontal_solver.declare_variable(m_boxes[row[0]]->get_name());
+    auto formula = m_horizontal_solver.declare_variable(m_boxes[row[0]]->get_name() + ".width");
     for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
-      formula = formula + m_horizontal_solver.declare_variable(m_boxes[row[i]]->get_name());
+      formula = formula + m_horizontal_solver.declare_variable(m_boxes[row[i]]->get_name() + ".width");
     }
     formulas.push_back(formula == m_horizontal_solver.declare_variable(LAYOUT_NAME));
   }
@@ -976,9 +994,9 @@ z3::expr_vector Layout::build_vertical_formulas(const std::vector<std::vector<in
     if(column.empty()) {
       continue;
     }
-    auto formula = m_vertical_solver.declare_variable(m_boxes[column[0]]->get_name());
+    auto formula = m_vertical_solver.declare_variable(m_boxes[column[0]]->get_name() + ".height");
     for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
-      formula = formula + m_vertical_solver.declare_variable(m_boxes[column[i]]->get_name());
+      formula = formula + m_vertical_solver.declare_variable(m_boxes[column[i]]->get_name() + ".height");
     }
     formulas.push_back(formula == m_vertical_solver.declare_variable(LAYOUT_NAME));
   }
@@ -996,13 +1014,13 @@ void Layout::calculate_min_max_size() {
     if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
       horizontal_unchanged_variables.insert(box->get_name());
     } else {
-      horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name()) % m_min_fixed_box_width == 0);
-      horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name()) <= m_horizontal_solver.declare_variable(LAYOUT_NAME));
+      horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name() + ".width") % m_min_fixed_box_width == 0);
+      horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name() + ".width") <= m_horizontal_solver.declare_variable(LAYOUT_NAME));
     }
     if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
       vertical_unchanged_variables.insert(box->get_name());
     } else {
-      vertical_additional_formulas.push_back(m_vertical_solver.declare_variable(box->get_name()) % m_min_fixed_box_height == 0);
+      vertical_additional_formulas.push_back(m_vertical_solver.declare_variable(box->get_name() + ".height") % m_min_fixed_box_height == 0);
     }
   }
   //horizontal_unchanged_variables.insert(LAYOUT_NAME);
@@ -1090,4 +1108,31 @@ void Layout::calculate_min_max_size() {
     m_max_size.setHeight(MAX_LAYOUT_SIZE);
   }
 
+}
+
+expr_vector Layout::set_position_variable_value(const std::vector<QRect>& boxes_rects, const std::vector<Constraint::Variable>& variables) {
+  auto formulas = expr_vector(m_position_solver.get_context());
+  for(auto& v : variables) {
+    auto name = v.m_name;
+    if(!m_name_map.contains(name)) {
+      continue;
+    }
+    auto rect = boxes_rects[m_name_map[name]];
+    auto value = [&] {
+      if(v.m_property == Constraint::Property::LEFT) {
+        return rect.x();
+      } else if(v.m_property == Constraint::Property::TOP) {
+        return rect.y();
+      } else if(v.m_property == Constraint::Property::RIGHT) {
+        return rect.right();
+      } else if(v.m_property == Constraint::Property::BOTTOM) {
+        return rect.bottom();
+      }
+      return -1;
+    }();
+    if(value >= 0) {
+      formulas.push_back(m_position_solver.declare_variable(v.m_content) == value);
+    }
+  }
+  return formulas;
 }

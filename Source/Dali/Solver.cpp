@@ -203,6 +203,13 @@ double Solver::solve_minimum(const expr_vector& formulas, const std::unordered_s
   return min;
 }
 
+bool Solver::check(const expr_vector& formulas) {
+  m_solver.push();
+  m_solver.add(formulas);
+  auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
+  return m_solver.check() == check_result::sat;
+}
+
 expr Solver::declare_variable(const std::string& name) {
   return m_context.int_const(name.c_str());
 }

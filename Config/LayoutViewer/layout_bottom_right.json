@@ -38,5 +38,7 @@
         }
     ],
     "constraints": [
+        "D.x <= 400",
+        "D.bottom <= 550"
     ]
 }

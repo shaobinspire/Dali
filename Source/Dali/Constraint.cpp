@@ -39,6 +39,14 @@ auto to_property(const std::string& value) {
     return Constraint::Property::HEIGHT;
   } else if(value == "width" || value == "width()") {
     return Constraint::Property::WIDTH;
+  } else if(value == "x") {
+    return Constraint::Property::LEFT;
+  } else if(value == "y") {
+    return Constraint::Property::TOP;
+  } else if(value == "right") {
+    return Constraint::Property::RIGHT;
+  } else if(value == "bottom") {
+    return Constraint::Property::BOTTOM;
   }
   return Constraint::Property::NONE;
 }
@@ -120,6 +128,7 @@ std::vector<ExpressionToken> split(const std::string& expression) {
 
 Constraint::Variable parse_variable(const std::string& term) {
   auto variable = Constraint::Variable();
+  variable.m_content = term;
   if(auto p = term.find("."); p != std::string::npos) {
     variable.m_name = term.substr(0, p);
     variable.m_property = to_property(term.substr(p + 1));
@@ -139,6 +148,25 @@ Constraint::Element parse_element(const std::string& term) {
   return element;
 }
 
+Constraint::Type parse_type(Constraint::Property property) {
+  switch(property) {
+    case Constraint::Property::LEFT:
+      return Constraint::Type::LEFT_RELATED;
+    case Constraint::Property::RIGHT:
+      return Constraint::Type::RIGHT_RELATED;
+    case Constraint::Property::TOP:
+      return Constraint::Type::TOP_RELATED;
+    case Constraint::Property::BOTTOM:
+      return Constraint::Type::BOTTOM_RELATED;
+    case Constraint::Property::WIDTH:
+      return Constraint::Type::WIDTH_RELATED;
+    case Constraint::Property::HEIGHT:
+      return Constraint::Type::HEIGHT_RELATED;
+  }
+  return Constraint::Type::NONE;
+}
+
+
 expr get_formula(context& context, const std::vector<Constraint::Element>& elements) {
   if(elements.empty()) {
     return expr(context);
@@ -153,7 +181,8 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
         if(variable.m_name.empty()) {
           stack.push(context.int_const(LAYOUT_NAME));
         } else {
-          stack.push(context.int_const(variable.m_name.c_str()));
+          //stack.push(context.int_const(variable.m_name.c_str()));
+          stack.push(context.int_const(variable.m_content.c_str()));
         }
       },
       [&] (const Constraint::Operator o) {
@@ -169,7 +198,7 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
 
 Constraint::Constraint(std::string expression)
     : m_expression(std::move(expression)),
-      m_is_width_related(true) {
+      m_type_related(Type::NONE) {
   parse();
 }
 
@@ -195,12 +224,41 @@ const std::unordered_set<std::string>& Constraint::get_variable_names() const {
   return m_variable_names;
 }
 
-bool Constraint::is_width_related() const {
-  return m_is_width_related;
+const std::vector<Constraint::Variable>& Constraint::get_variables() const {
+  return m_variables;
+}
+
+Constraint::Type Constraint::get_type_related() const {
+  return m_type_related;
 }
 
 Constraint::ComparisonOperator Constraint::get_comparsion_operator() const {
   return m_comparison_operator;
+}
+
+void Constraint::parse() {
+  //auto start = std::chrono::high_resolution_clock::now();
+  auto reg_exp = std::regex("(=+|[<>!]=?)");
+  auto match = std::smatch();
+  if(!std::regex_search(m_expression, match, reg_exp)) {
+    return;
+  }
+  if(match.str().front() == '=') {
+    m_comparison_operator = ComparisonOperator::EQUAL_TO;
+  } else if(match.str() == "<") {
+    m_comparison_operator = ComparisonOperator::LESS_THAN;
+  } else if(match.str() == "<=") {
+    m_comparison_operator = ComparisonOperator::LESS_THAN_OR_EQUAL_TO;
+  } else if(match.str() == ">") {
+    m_comparison_operator = ComparisonOperator::GREATER_THAN;
+  } else if(match.str() == ">=") {
+    m_comparison_operator = ComparisonOperator::GREATER_THAN_OR_EQUAL_TO;
+  } else {
+    m_comparison_operator = ComparisonOperator::NONE;
+    return;
+  }
+  m_lhs_elements = convert_to_rpn(match.prefix());
+  m_rhs_elements = convert_to_rpn(match.suffix());
 }
 
 std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& expression) {
@@ -216,11 +274,8 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& e
       if(std::holds_alternative<Variable>(elements.back())) {
         auto& variable = std::get<Variable>(elements.back());
         m_variable_names.insert(variable.m_name);
-        if(variable.m_property == Property::HEIGHT) {
-          m_is_width_related = false;
-        } else if(variable.m_property == Property::WIDTH) {
-          m_is_width_related = true;
-        }
+        m_type_related = parse_type(variable.m_property);
+        m_variables.push_back(variable);
       }
     } else if(token.m_token == "(") {
       operator_stack.push(token);
@@ -248,27 +303,19 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& e
   return elements;
 }
 
-void Constraint::parse() {
-  //auto start = std::chrono::high_resolution_clock::now();
-  auto reg_exp = std::regex("(=+|[<>!]=?)");
-  auto match = std::smatch();
-  if(!std::regex_search(m_expression, match, reg_exp)) {
-    return;
+std::string Dali::to_string(Constraint::Property property) {
+  if(property == Constraint::Property::LEFT) {
+    return ".x";
+  } else if(property == Constraint::Property::TOP) {
+    return ".y";
+  } else if(property == Constraint::Property::RIGHT) {
+    return ".right";
+  } else if(property == Constraint::Property::BOTTOM) {
+    return ".bottom";
+  } else if(property == Constraint::Property::WIDTH) {
+    return ".width";
+  } else if(property == Constraint::Property::HEIGHT) {
+    return ".height";
   }
-  if(match.str().front() == '=') {
-    m_comparison_operator = ComparisonOperator::EQUAL_TO;
-  } else if(match.str() == "<") {
-    m_comparison_operator = ComparisonOperator::LESS_THAN;
-  } else if(match.str() == "<=") {
-    m_comparison_operator = ComparisonOperator::LESS_THAN_OR_EQUAL_TO;
-  } else if(match.str() == ">") {
-    m_comparison_operator = ComparisonOperator::GREATER_THAN;
-  } else if(match.str() == ">=") {
-    m_comparison_operator = ComparisonOperator::GREATER_THAN_OR_EQUAL_TO;
-  } else {
-    m_comparison_operator = ComparisonOperator::NONE;
-    return;
-  }
-  m_lhs_elements = convert_to_rpn(match.prefix());
-  m_rhs_elements = convert_to_rpn(match.suffix());
+  return "";
 }

@@ -64,10 +64,12 @@ std::shared_ptr<Layout> Parser::parse(const nlohmann::json& m_json) {
   if(m_json.contains("constraints")) {
     for(auto& expression : m_json["constraints"]) {
       auto constraint = Constraint(expression.get<std::string>());
-      if(constraint.is_width_related()) {
+      if(constraint.get_type_related() == Constraint::Type::WIDTH_RELATED) {
         layout->add_width_constraint(std::move(constraint));
-      } else {
+      } else if(constraint.get_type_related() == Constraint::Type::HEIGHT_RELATED) {
         layout->add_height_constraint(std::move(constraint));
+      } else if(constraint.get_type_related() != Constraint::Type::NONE) {
+        layout->add_position_constraint(std::move(constraint));
       }
     }
   }

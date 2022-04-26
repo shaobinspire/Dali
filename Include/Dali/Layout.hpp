@@ -28,6 +28,7 @@ namespace Dali {
       void add_box(LayoutBox* box);
       void add_width_constraint(const Constraint& constraint);
       void add_height_constraint(const Constraint& constraint);
+      void add_position_constraint(const Constraint& constraint);
 
       int get_box_count() const;
 
@@ -70,10 +71,12 @@ namespace Dali {
       QPoint m_max_pos;
       Constraints m_horizontal_constraints;
       Constraints m_vertical_constraints;
+      Constraints m_position_constraints;
       //Constraints m_width_sum_constraints;
       //Constraints m_height_sum_constraints;
       Solver m_horizontal_solver;
       Solver m_vertical_solver;
+      Solver m_position_solver;
       Status m_status;
       QSize m_last_size;
       int m_min_fixed_box_width;
@@ -105,6 +108,7 @@ namespace Dali {
         const std::vector<std::vector<int>>::iterator& end, int width, std::vector<int>& tmp, std::vector<std::vector<int>>& result);
       void permute_vertical(const std::vector<std::vector<int>>::iterator& iter, int size,
         const std::vector<std::vector<int>>::iterator& end, int height, std::vector<int>& tmp, std::vector<std::vector<int>>& result);
+      z3::expr_vector set_position_variable_value(const std::vector<QRect>& boxes_rects, const std::vector<Constraint::Variable>& variables);
   };
 }
 
