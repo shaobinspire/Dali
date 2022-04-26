@@ -55,7 +55,7 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
   if(watched == centralWidget() && event->type() == QEvent::Resize) {
     update_layout_size_message();
     if(auto status = m_layout_widget->get_layout_status();
-        status != Layout::Status::NONE) {
+      status != Layout::Status::NONE) {
       auto message = QString("The layout is %1.");
       if(status == Layout::Status::LAYOUT_OVERFLOW) {
         message = message.arg("overflow");
@@ -120,6 +120,13 @@ void MainWindow::create_menu() {
   file_tool_bar->addAction(m_refresh_action);
   m_refresh_action->setEnabled(false);
   m_view_menu = menuBar()->addMenu(tr("&View"));
+  auto zoom_menu = menuBar()->addMenu(tr("&Zoom"));
+  auto zoom_tool_bar = addToolBar(tr("Zoom"));
+  auto reset_zoom_icon = QIcon(":/images/resetzoom.png");
+  m_show_original_action =
+    zoom_menu->addAction(reset_zoom_icon, tr("&Show Original"), this, &MainWindow::show_original);
+  zoom_tool_bar->addAction(m_show_original_action);
+  m_show_original_action->setEnabled(false);
 }
 
 void MainWindow::create_size_setting_tool_bar() {
@@ -179,6 +186,19 @@ bool MainWindow::save_as() {
   return save_file(dialog.selectedFiles().first());
 }
 
+void MainWindow::show_original() {
+  if(!maybe_save()) {
+    return;
+  }
+  m_error_output->setText("");
+  auto layout = m_parser.parse(m_editor->get_json());
+  m_layout_widget->set_layout(layout);
+  m_layout_widget->show_original_layout(true);
+  adjustSize();
+  m_layout_widget->update();
+  m_layout_widget->show_original_layout(false);
+}
+
 bool MainWindow::save_file(const QString& file_name) {
   auto error_message = QString();
   QGuiApplication::setOverrideCursor(Qt::WaitCursor);
@@ -223,19 +243,18 @@ bool MainWindow::maybe_save() {
 void MainWindow::parse_result(bool is_failed) {
   if(is_failed) {
     m_refresh_action->setEnabled(false);
+    m_show_original_action->setEnabled(true);
     m_error_output->setText(QString::fromStdString(m_editor->get_errors()));
     m_layout_widget->set_layout(nullptr);
     m_layout_size_label->setText("");
     m_size_label->setText("");
   } else {
     m_refresh_action->setEnabled(true);
+    m_show_original_action->setEnabled(true);
     m_error_output->setText("");
     auto layout = m_parser.parse(m_editor->get_json());
-    //m_layout_widget->setGeometry(centralWidget()->geometry().marginsRemoved(
-    //  centralWidget()->layout()->contentsMargins()));
-    auto p = m_layout_widget->pos();
-    auto m = centralWidget()->layout()->contentsMargins();
     m_layout_widget->set_layout(layout);
+    m_layout_widget->adjust_size();
     update_layout_size_message();
     auto min_size = m_layout_widget->get_min_size();
     auto max_size = m_layout_widget->get_max_size();
@@ -249,6 +268,8 @@ void MainWindow::update_layout_size_message() {
   auto rect = m_layout_widget->get_layout_rect();
   m_layout_size_label->setText(QString("Layout Size: %1x%2    ")
     .arg(rect.width()).arg(rect.height()));
+  m_width_spin_box->blockSignals(true);
   m_width_spin_box->setValue(rect.width());
+  m_height_spin_box->blockSignals(true);
   m_height_spin_box->setValue(rect.height());
 }

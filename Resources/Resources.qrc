@@ -3,5 +3,6 @@
     <file>images/open.png</file>
     <file>images/save.png</file>
     <file>images/refresh.png</file>
+    <file>images/resetzoom.png</file>
   </qresource>
 </RCC>

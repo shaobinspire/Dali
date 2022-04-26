@@ -147,13 +147,13 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
   for(auto& element : elements) {
     std::visit(overloaded{
       [&](double number) {
-        stack.push(context.real_val(std::to_string(number).c_str()));
+        stack.push(context.int_val(std::to_string(number).c_str()));
       },
       [&] (const Constraint::Variable& variable) {
         if(variable.m_name.empty()) {
-          stack.push(context.real_const(LAYOUT_NAME));
+          stack.push(context.int_const(LAYOUT_NAME));
         } else {
-          stack.push(context.real_const(variable.m_name.c_str()));
+          stack.push(context.int_const(variable.m_name.c_str()));
         }
       },
       [&] (const Constraint::Operator o) {
@@ -208,6 +208,9 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& e
   auto operator_stack = std::stack<ExpressionToken>();
   auto list = split(expression);
   for(auto& token : list) {
+    if(token.m_token.empty()) {
+      return elements;
+    }
     if(!token.m_is_operator) {
       elements.push_back(parse_element(token.m_token));
       if(std::holds_alternative<Variable>(elements.back())) {

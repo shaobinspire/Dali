@@ -11,6 +11,10 @@ namespace Dali {
     public:
       explicit LayoutWidget(QWidget* parent = nullptr);
 
+      void adjust_size();
+
+      //void adjust_size_fit_layout();
+
       void set_layout(std::shared_ptr<Layout> layout);
 
       QSize get_min_size() const;
@@ -24,12 +28,17 @@ namespace Dali {
       
       Layout::Status get_layout_status() const;
 
+      void show_original_layout(bool is_show_original);
+
+      QSize sizeHint() const override;
+
     protected:
       void resizeEvent(QResizeEvent* event) override;
       void paintEvent(QPaintEvent* event) override;
 
     private:
       std::shared_ptr<Layout> m_layout;
+      bool m_is_show_original;
   };
 }
 

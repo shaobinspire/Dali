@@ -101,6 +101,10 @@ namespace Dali {
       z3::expr_vector build_horizontal_formulas(const std::vector<std::vector<int>>& rows);
       z3::expr_vector build_vertical_formulas(const std::vector<std::vector<int>>& columns);
       void calculate_min_max_size();
+      void permute_horizontal(const std::vector<std::vector<int>>::iterator& iter, int size,
+        const std::vector<std::vector<int>>::iterator& end, int width, std::vector<int>& tmp, std::vector<std::vector<int>>& result);
+      void permute_vertical(const std::vector<std::vector<int>>::iterator& iter, int size,
+        const std::vector<std::vector<int>>::iterator& end, int height, std::vector<int>& tmp, std::vector<std::vector<int>>& result);
   };
 }
 

@@ -29,8 +29,21 @@ auto get_semitransparent_color(SizePolicy policy) {
 
 LayoutWidget::LayoutWidget(QWidget *parent)
   : QWidget(parent),
-    m_layout(nullptr) {}
+    m_layout(nullptr),
+    m_is_show_original(false) {}
 
+void LayoutWidget::adjust_size() {
+  if(m_layout) {
+    m_layout->resize(size());
+  }
+}
+
+//void LayoutWidget::adjust_size_fit_layout() {
+//  if(m_layout) {
+//    resize(m_layout->get_rect().size());
+//  }
+//}
+//
 void LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   setMinimumSize(0, 0);
   setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
@@ -41,7 +54,6 @@ void LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   m_layout->build();
   setMinimumSize(m_layout->get_min_size());
   setMaximumSize(m_layout->get_max_size());
-  m_layout->resize(size());
 }
 
 QSize LayoutWidget::get_min_size() const {
@@ -82,8 +94,19 @@ Layout::Status LayoutWidget::get_layout_status() const {
   return m_layout->get_status();
 }
 
+void LayoutWidget::show_original_layout(bool is_show_original) {
+  m_is_show_original = is_show_original;
+}
+
+QSize LayoutWidget::sizeHint() const {
+  if(!m_layout) {
+    return {0, 0};
+  }
+  return m_layout->get_rect().size();
+}
+
 void LayoutWidget::resizeEvent(QResizeEvent* event) {
-  if(m_layout) {
+  if(m_layout && !m_is_show_original) {
     m_layout->resize(event->size());
   }
   QWidget::resizeEvent(event);

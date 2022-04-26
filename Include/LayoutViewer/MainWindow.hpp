@@ -27,6 +27,7 @@ namespace Dali {
       QSpinBox* m_width_spin_box;
       QSpinBox* m_height_spin_box;
       QAction* m_refresh_action;
+      QAction* m_show_original_action;
       QString m_file_name;
       Parser m_parser;
 
@@ -37,6 +38,7 @@ namespace Dali {
       void refresh();
       bool save();
       bool save_as();
+      void show_original();
       bool save_file(const QString& file_name);
       bool maybe_save();
       void parse_result(bool is_failed);

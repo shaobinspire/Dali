@@ -1,0 +1,104 @@
+{
+    "layout": [
+        {
+            "name": "A",
+            "x": 0,
+            "y": 0,
+            "width": 400,
+            "height": 400,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "B",
+            "x": 400,
+            "y": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "C",
+            "x": 600,
+            "y": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "D",
+            "x": 400,
+            "y": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "E",
+            "x": 600,
+            "y": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "F",
+            "x": 0,
+            "y": 400,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "G",
+            "x": 200,
+            "y": 400,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "H",
+            "x": 0,
+            "y": 600,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "I",
+            "x": 200,
+            "y": 600,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "J",
+            "x": 400,
+            "y": 400,
+            "width": 400,
+            "height": 400,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        }
+    ],
+    "constraints": [
+        "B.width = E.width",
+        "F.width = I.width",
+        "A.width = J.width",
+        "B.width = G.width",
+        "B.height = E.height",
+        "F.height = I.height",
+        "A.height = J.height",
+        "B.height = G.height"
+    ]
+}
