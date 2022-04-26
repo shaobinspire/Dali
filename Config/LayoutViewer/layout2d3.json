@@ -110,10 +110,11 @@
         }
     ],
     "constraints": [
-"1.x > 0",
+"1.width > 0",
          "0.width >= 0",
 "4.width >= 0",
          "3.width >= 0",
+ "5.width >= 0",
  "7.width >= 0",
           "10.width >= 0",
          "0.height >= 0",
