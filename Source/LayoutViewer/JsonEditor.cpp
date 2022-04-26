@@ -34,6 +34,12 @@ json& get_layout_schema() {
             "height": {
               "type": "number"
             },
+            "right": {
+              "type": "number"
+            },
+            "bottom": {
+              "type": "number"
+            },
             "horizontal": {
               "type": "string",
               "enum": ["fixed", "take_space"]
@@ -46,10 +52,34 @@ json& get_layout_schema() {
           "required": [
             "x",
             "y",
-            "width",
-            "height",
             "horizontal",
             "vertical"
+          ],
+          "oneOf": [
+            {
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            {
+              "required": [
+                "right",
+                "bottom"
+              ]
+            },
+            {
+              "required": [
+                "right",
+                "height"
+              ]
+            },
+            {
+              "required": [
+                "width",
+                "bottom"
+              ]
+            }
           ]
         }
       },

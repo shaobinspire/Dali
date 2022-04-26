@@ -20,7 +20,30 @@ std::shared_ptr<Layout> Parser::parse(const nlohmann::json& m_json) {
     if(item.contains("name")) {
       box->set_name(item["name"].get<std::string>());
     }
-    box->set_rect({item["x"], item["y"], item["width"], item["height"]});
+    auto top_left = QPoint{item["x"], item["y"]};
+    auto width = -1;
+    if(item.contains("width")) {
+      width = item["width"];
+    }
+    auto height = -1;
+    if(item.contains("height")) {
+      height = item["height"];
+    }
+    auto right = -1;
+    if(item.contains("right")) {
+      right = item["right"];
+    }
+    auto bottom = -1;
+    if(item.contains("bottom")) {
+      bottom = item["bottom"];
+    }
+    if(width < 0 && right >= 0) {
+      width = right - top_left.x() + 1;
+    }
+    if(height < 0 && bottom >= 0) {
+      height = bottom - top_left.y() + 1;
+    }
+    box->set_rect({top_left, QSize(width, height)});
     if(item.contains("policy")) {
       auto size_policy = get_size_policy(item["policy"]);
       box->set_horizontal_size_policy(size_policy);

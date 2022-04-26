@@ -31,6 +31,7 @@ namespace Details {
         const std::unordered_set<std::string>& unchanged_variables, int value);
       double solve_maximum(const z3::expr_vector& formulas);
       double solve_minimum(const z3::expr_vector& formulas);
+      double solve_minimum(const z3::expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables);
 
       z3::expr declare_variable(const std::string& name);
 

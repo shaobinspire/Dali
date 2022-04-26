@@ -147,7 +147,7 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
   for(auto& element : elements) {
     std::visit(overloaded{
       [&](double number) {
-        stack.push(context.int_val(std::to_string(number).c_str()));
+        stack.push(context.real_val(std::to_string(number).c_str()));
       },
       [&] (const Constraint::Variable& variable) {
         if(variable.m_name.empty()) {

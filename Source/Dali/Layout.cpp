@@ -987,22 +987,23 @@ z3::expr_vector Layout::build_vertical_formulas(const std::vector<std::vector<in
 
 void Layout::calculate_min_max_size() {
   auto boxes_rects = std::vector<QRect>();
-  //auto horizontal_unchanged_variables = std::unordered_set<std::string>();
-  //auto vertical_unchanged_variables = std::unordered_set<std::string>();
-  //auto horizontal_additional_formulas = expr_vector(m_horizontal_solver.get_context());
-  //auto vertical_additional_formulas = expr_vector(m_vertical_solver.get_context());
+  auto horizontal_unchanged_variables = std::unordered_set<std::string>();
+  auto vertical_unchanged_variables = std::unordered_set<std::string>();
+  auto horizontal_additional_formulas = expr_vector(m_horizontal_solver.get_context());
+  auto vertical_additional_formulas = expr_vector(m_vertical_solver.get_context());
   for(auto box : m_boxes) {
     boxes_rects.push_back(box->get_rect());
-    //if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
-    //  horizontal_unchanged_variables.insert(box->get_name());
-    //} else {
-    //  horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name()) % m_min_fixed_box_width == 0);
-    //}
-    //if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
-    //  vertical_unchanged_variables.insert(box->get_name());
-    //} else {
-    //  vertical_additional_formulas.push_back(m_vertical_solver.declare_variable(box->get_name()) % m_min_fixed_box_height == 0);
-    //}
+    if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
+      horizontal_unchanged_variables.insert(box->get_name());
+    } else {
+      horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name()) % m_min_fixed_box_width == 0);
+      horizontal_additional_formulas.push_back(m_horizontal_solver.declare_variable(box->get_name()) <= m_horizontal_solver.declare_variable(LAYOUT_NAME));
+    }
+    if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
+      vertical_unchanged_variables.insert(box->get_name());
+    } else {
+      vertical_additional_formulas.push_back(m_vertical_solver.declare_variable(box->get_name()) % m_min_fixed_box_height == 0);
+    }
   }
   //horizontal_unchanged_variables.insert(LAYOUT_NAME);
   //vertical_unchanged_variables.insert(LAYOUT_NAME);
@@ -1036,11 +1037,17 @@ void Layout::calculate_min_max_size() {
       //for(auto& solution : solutions) {
         adjust_vertical_layout(solution, columns, new_boxes_rects);
         auto new_horizontal_formulas = build_horizontal_formulas(build_rows(new_boxes_rects));
-        auto new_min_width = static_cast<int>(m_horizontal_solver.solve_minimum(new_horizontal_formulas));
+        for(auto iter = horizontal_additional_formulas.begin(); iter != horizontal_additional_formulas.end(); ++iter) {
+          new_horizontal_formulas.push_back(*iter);
+        }
+        new_horizontal_formulas.push_back(m_horizontal_solver.declare_variable(LAYOUT_NAME) <= m_total_fixed_box_width);
+        auto new_min_width = static_cast<int>(m_horizontal_solver.solve_minimum(new_horizontal_formulas, horizontal_unchanged_variables));
         auto new_max_width = static_cast<int>(m_horizontal_solver.solve_maximum(new_horizontal_formulas));
         min_height = std::min(min_height, height);
         min_width = std::min(min_width, new_min_width);
         max_width = std::max(max_width, new_max_width);
+        //columns = build_columns(new_boxes_rects);
+        //vertical_formulas = build_vertical_formulas(columns);
       //}
       //columns = build_columns(new_boxes_rects);
       //vertical_formulas = build_vertical_formulas(columns);
@@ -1069,8 +1076,8 @@ void Layout::calculate_min_max_size() {
         min_width = std::min(min_width, width);
         min_height = std::min(min_height, new_min_height);
         max_height = std::max(max_height, new_max_height);
-        //rows = build_rows(new_boxes_rects);
-        //horizontal_formulas = build_horizontal_formulas(rows);
+        rows = build_rows(new_boxes_rects);
+        horizontal_formulas = build_horizontal_formulas(rows);
       //}
     }
     m_min_size.setWidth(min_width);

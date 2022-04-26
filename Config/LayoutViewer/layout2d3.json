@@ -110,16 +110,14 @@
         }
     ],
     "constraints": [
-"1.x > 500",
+"1.x > 0",
          "0.width >= 0",
 "4.width >= 0",
-         "2.width <= 100",
-         "5.width >= 0",
          "3.width >= 0",
  "7.width >= 0",
           "10.width >= 0",
          "0.height >= 0",
-         "2.height = 7.height",
-         "0.height = 7.height"
+         "2.height >= 0",
+         "7.height>=0"
     ]
 }
