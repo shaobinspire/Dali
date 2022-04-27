@@ -7,7 +7,7 @@
             "width": 200,
             "height": 200,
             "horizontal": "fixed",
-            "vertical": "fixed"
+            "vertical": "take_space"
         },
         {
             "name": "B",
@@ -16,7 +16,7 @@
             "width": 200,
             "height": 200,
             "horizontal": "fixed",
-            "vertical": "fixed"
+            "vertical": "take_space"
         },
         {
             "name": "C",
@@ -60,7 +60,7 @@
             "top": 400,
             "width": 200,
             "height": 100,
-            "horizontal": "take_space",
+            "horizontal": "fixed",
             "vertical": "take_space"
         },
         {
@@ -79,7 +79,7 @@
             "width": 200,
             "height": 200,
             "horizontal": "fixed",
-            "vertical": "fixed"
+            "vertical": "take_space"
         }
     ]
 }

@@ -44,16 +44,20 @@ void LayoutWidget::adjust_size() {
 //  }
 //}
 //
-void LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
+bool LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   setMinimumSize(0, 0);
   setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-  m_layout = layout;
-  if(!m_layout) {
-    return;
+  m_layout.reset();
+  if(!layout) {
+    return false;
   }
-  m_layout->build();
+  if(!layout->build()) {
+    return false;
+  }
+  m_layout = layout;
   setMinimumSize(m_layout->get_min_size());
-  setMaximumSize(m_layout->get_max_size());
+  //setMaximumSize(m_layout->get_max_size());
+  return true;
 }
 
 QSize LayoutWidget::get_min_size() const {

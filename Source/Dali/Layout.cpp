@@ -95,8 +95,6 @@ void Layout::add_box(LayoutBox* box) {
     m_total_fixed_box_height += box->get_rect().height();
   }
   m_rect = m_rect.united(box->get_rect());
-  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
-  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
   if(box->get_name().empty()) {
     box->set_name("DALI_LAYOUT_BOX" + m_boxes.size());
     box->set_name_visible(false);
@@ -292,11 +290,15 @@ void Layout::resize(const QSize& size) {
 }
 
 bool Layout::build() {
+  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
+  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
   m_position_solver.add_const_formula(m_position_constraints.convert(m_position_solver.get_context()));
   auto horizontal_expanding_box = std::vector<std::pair<int, int>>();
   auto vertical_expanding_box = std::vector<std::pair<int, int>>();
+  auto area = 0;
   for(auto i = 0; i < get_box_count(); ++i) {
     auto box = m_boxes[i];
+    area += box->get_rect().width() * box->get_rect().height();
     if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
       m_horizontal_constraints.add_local_constraint(Constraint(
         fmt::format("{}.width = {}", box->get_name(), box->get_rect().width())), true);
@@ -317,6 +319,9 @@ bool Layout::build() {
         vertical_expanding_box.push_back({box->get_rect().height(), i});
       }
     }
+  }
+  if(area != m_rect.width() * m_rect.height()) {
+    return false;
   }
   if(!horizontal_expanding_box.empty()) {
     std::sort(horizontal_expanding_box.begin(), horizontal_expanding_box.end());
@@ -845,15 +850,86 @@ void Layout::permute_vertical(const std::vector<std::vector<int>>::iterator& ite
 std::vector<std::vector<int>> Layout::build_rows(
     const std::vector<QRect>& boxes_rects) {
   auto size = static_cast<int>(boxes_rects.size());
+  auto top_map_row = std::map<int, std::vector<int>>();
+  auto bottom_map_row = std::map<int, std::vector<int>>();
+  auto total_rect = QRect();
+  for(auto i = 0; i < size; ++i) {
+    const auto& rect = boxes_rects[i];
+    if(rect.width() != 0 && rect.height() != 0) {
+      total_rect = total_rect.united(rect);
+    }
+    top_map_row[rect.top()].push_back(i);
+    bottom_map_row[rect.bottom()].push_back(i);
+  }
+  auto map_rows = std::vector<std::map<int, std::vector<int>>>(top_map_row.size());
+  for(auto i = 0; i < size; ++i) {
+    const auto& rect = boxes_rects[i];
+    auto index = 0;
+    for(auto iter = top_map_row.begin(); iter != top_map_row.end(); ++iter, ++index) {
+      auto y = iter->first;
+      if((rect.height() == 0 && (y == rect.y() || y == rect.bottom())) || (y >= rect.y() && y <= rect.bottom())) {
+        map_rows[index][rect.x()].push_back(i);
+      } else if(y > rect.bottom()) {
+        break;
+      }
+    }
+    auto& last_row = *bottom_map_row.rbegin();
+    for(auto iter = last_row.second.begin(); iter != last_row.second.end(); ++iter) {
+      if(i == *iter) {
+        map_rows.back()[rect.x()].push_back(i);
+      }
+    }
+
+    //for(auto& bm : bottom_map_row) {
+    //  auto y = bm.first;
+    //  if((rect.height() == 0 && (y == rect.y() || y == rect.bottom())) || (y >= rect.y() && y <= rect.bottom())) {
+    //    map_rows[y][rect.x()].push_back(i);
+    //  } else if(y > rect.bottom()) {
+    //    break;
+    //  }
+    //}
+  }
+  for(auto& v : map_rows.back()) {
+    v.second.erase(std::unique(v.second.begin(), v.second.end()), v.second.end());
+  }
+  auto tmp_rows = std::vector<std::vector<std::vector<int>>>(map_rows.size());
+  for(auto i = 0; i < static_cast<int>(map_rows.size()); ++i) {
+    for(auto& m : map_rows[i]) {
+      if(m.second.size() > 1) {
+        auto sub_row = std::vector<int>();
+        for(auto k : m.second) {
+          if(boxes_rects[k].height() != 0 && boxes_rects[k].width() == 0) {
+            tmp_rows[i].push_back({k});
+          } else {
+            sub_row.push_back(k);
+          }
+        }
+        if(!sub_row.empty()) {
+          tmp_rows[i].push_back(sub_row);
+        }
+      } else {
+        tmp_rows[i].push_back(m.second);
+      }
+    }
+  }
+  auto rows = std::vector<std::vector<int>>();
+  auto row = std::vector<int>();
+  for(auto& r : tmp_rows) {
+    permute_horizontal(r.begin(), r.size(), r.end(), total_rect.width(), row, rows);
+  }
+  return rows;
+
+  /*
+  auto size = static_cast<int>(boxes_rects.size());
   auto vertical_list = std::vector<int>();
+  auto map_row = std::map<int, std::vector<int>>();
   auto rect = QRect();
   for(auto i = 0; i < size; ++i) {
-    //if(boxes_rects[i].height() != 0) {
-      vertical_list.push_back(boxes_rects[i].y());
-    //}
-      if(boxes_rects[i].width() != 0 && boxes_rects[i].height() != 0) {
-        rect = rect.united(boxes_rects[i]);
-      }
+    vertical_list.push_back(boxes_rects[i].y());
+    if(boxes_rects[i].width() != 0 && boxes_rects[i].height() != 0) {
+      rect = rect.united(boxes_rects[i]);
+    }
+    map_row[boxes_rects[i].bottom()].push_back(i);
   }
   std::sort(vertical_list.begin(), vertical_list.end());
   vertical_list.erase(std::unique(vertical_list.begin(), vertical_list.end()),
@@ -906,39 +982,44 @@ std::vector<std::vector<int>> Layout::build_rows(
   //  }
   //}
   return rows;
+  */
 }
 
 std::vector<std::vector<int>> Layout::build_columns(
     const std::vector<QRect>& boxes_rects) {
   auto size = static_cast<int>(boxes_rects.size());
-  auto horizontal_list = std::vector<int>();
-  auto rect = QRect();
-  for(auto i = 0; i < size; ++i) {
-    //if(boxes_rects[i].width() != 0) {
-      horizontal_list.push_back(boxes_rects[i].x());
-    //}
-      if(boxes_rects[i].width() != 0 && boxes_rects[i].height() != 0) {
-        rect = rect.united(boxes_rects[i]);
-      }
-  }
-  std::sort(horizontal_list.begin(), horizontal_list.end());
-  horizontal_list.erase(
-    std::unique(horizontal_list.begin(), horizontal_list.end()),
-    horizontal_list.end());
-  //auto columns = std::vector<std::vector<int>>(horizontal_list.size());
-  auto map_columns = std::vector<std::map<int, std::vector<int>>>(horizontal_list.size());
+  auto total_rect = QRect();
+  auto left_map_column = std::map<int, std::vector<int>>();
+  auto right_map_column = std::map<int, std::vector<int>>();
   for(auto i = 0; i < size; ++i) {
     const auto& rect = boxes_rects[i];
-    for(auto j = 0; j != static_cast<int>(horizontal_list.size()); ++j) {
-      auto x = horizontal_list[j];
-      //if(rect.width() != 0 && x >= rect.x() && x <= rect.right()) {
+    if(rect.width() != 0 && rect.height() != 0) {
+      total_rect = total_rect.united(rect);
+    }
+    left_map_column[rect.left()].push_back(i);
+    right_map_column[rect.right()].push_back(i);
+  }
+  auto map_columns = std::vector<std::map<int, std::vector<int>>>(left_map_column.size());
+  for(auto i = 0; i < size; ++i) {
+    const auto& rect = boxes_rects[i];
+    auto index = 0;
+    for(auto iter = left_map_column.begin(); iter != left_map_column.end(); ++iter, ++index) {
+      auto x = iter->first;
       if((rect.width() == 0 && (x == rect.x() || x == rect.right())) || (x >= rect.x() && x <= rect.right())) {
-        //columns[j].push_back(i);
-        map_columns[j][rect.y()].push_back(i);
+        map_columns[index][rect.y()].push_back(i);
       } else if(x > rect.right()) {
         break;
       }
     }
+    auto& last_column = *right_map_column.rbegin();
+    for(auto iter = last_column.second.begin(); iter != last_column.second.end(); ++iter) {
+      if(i == *iter) {
+        map_columns.back()[rect.y()].push_back(i);
+      }
+    }
+  }
+  for(auto& v : map_columns.back()) {
+    v.second.erase(std::unique(v.second.begin(), v.second.end()), v.second.end());
   }
   auto tmp_columns = std::vector<std::vector<std::vector<int>>>(map_columns.size());
   for(auto i = 0; i < static_cast<int>(tmp_columns.size()); ++i) {
@@ -963,19 +1044,75 @@ std::vector<std::vector<int>> Layout::build_columns(
   auto columns = std::vector<std::vector<int>>();
   auto column = std::vector<int>();
   for(auto& c : tmp_columns) {
-    permute_vertical(c.begin(), c.size(), c.end(), rect.height(), column, columns);
+    permute_vertical(c.begin(), c.size(), c.end(), total_rect.height(), column, columns);
   }
-  //for(auto& c : map_columns) {
-  //  permute_vertical(c.begin(), c.size(), c.end(), rect.height(), column, columns);
+  return columns;
+  //auto size = static_cast<int>(boxes_rects.size());
+  //auto horizontal_list = std::vector<int>();
+  //auto rect = QRect();
+  //for(auto i = 0; i < size; ++i) {
+  //  //if(boxes_rects[i].width() != 0) {
+  //    horizontal_list.push_back(boxes_rects[i].x());
+  //  //}
+  //    if(boxes_rects[i].width() != 0 && boxes_rects[i].height() != 0) {
+  //      rect = rect.united(boxes_rects[i]);
+  //    }
   //}
-  //for(auto& column : columns) {
-  //  if(!column.empty()) {
-  //    std::sort(column.begin(), column.end(), [&] (int a, int b) {
-  //      return boxes_rects[a].y() < boxes_rects[b].y();
-  //    });
+  //std::sort(horizontal_list.begin(), horizontal_list.end());
+  //horizontal_list.erase(
+  //  std::unique(horizontal_list.begin(), horizontal_list.end()),
+  //  horizontal_list.end());
+  ////auto columns = std::vector<std::vector<int>>(horizontal_list.size());
+  //auto map_columns = std::vector<std::map<int, std::vector<int>>>(horizontal_list.size());
+  //for(auto i = 0; i < size; ++i) {
+  //  const auto& rect = boxes_rects[i];
+  //  for(auto j = 0; j != static_cast<int>(horizontal_list.size()); ++j) {
+  //    auto x = horizontal_list[j];
+  //    //if(rect.width() != 0 && x >= rect.x() && x <= rect.right()) {
+  //    if((rect.width() == 0 && (x == rect.x() || x == rect.right())) || (x >= rect.x() && x <= rect.right())) {
+  //      //columns[j].push_back(i);
+  //      map_columns[j][rect.y()].push_back(i);
+  //    } else if(x > rect.right()) {
+  //      break;
+  //    }
   //  }
   //}
-  return columns;
+  //auto tmp_columns = std::vector<std::vector<std::vector<int>>>(map_columns.size());
+  //for(auto i = 0; i < static_cast<int>(tmp_columns.size()); ++i) {
+  //  for(auto& m : map_columns[i]) {
+  //    if(m.second.size() > 1) {
+  //      auto sub_column = std::vector<int>();
+  //      for(auto k : m.second) {
+  //        if(boxes_rects[k].height() == 0 && boxes_rects[k].width() != 0) {
+  //          tmp_columns[i].push_back({k});
+  //        } else {
+  //          sub_column.push_back(k);
+  //        }
+  //      }
+  //      if(!sub_column.empty()) {
+  //        tmp_columns[i].push_back(sub_column);
+  //      }
+  //    } else {
+  //      tmp_columns[i].push_back(m.second);
+  //    }
+  //  }
+  //}
+  //auto columns = std::vector<std::vector<int>>();
+  //auto column = std::vector<int>();
+  //for(auto& c : tmp_columns) {
+  //  permute_vertical(c.begin(), c.size(), c.end(), rect.height(), column, columns);
+  //}
+  ////for(auto& c : map_columns) {
+  ////  permute_vertical(c.begin(), c.size(), c.end(), rect.height(), column, columns);
+  ////}
+  ////for(auto& column : columns) {
+  ////  if(!column.empty()) {
+  ////    std::sort(column.begin(), column.end(), [&] (int a, int b) {
+  ////      return boxes_rects[a].y() < boxes_rects[b].y();
+  ////    });
+  ////  }
+  ////}
+  //return columns;
 }
 
 expr_vector Layout::build_horizontal_formulas(const std::vector<std::vector<int>>& rows) {
@@ -1061,7 +1198,7 @@ void Layout::calculate_min_max_size() {
       for(auto& solution : solutions) {
         adjust_vertical_layout(solution, columns, new_boxes_rects);
         auto new_horizontal_formulas = build_horizontal_formulas(build_rows(new_boxes_rects));
-        auto new_max_width = static_cast<int>(m_horizontal_solver.solve_maximum(new_horizontal_formulas));
+        auto new_max_width = static_cast<int>(m_horizontal_solver.solve_maximum(new_horizontal_formulas, m_total_fixed_box_width));
         for(auto iter = horizontal_additional_formulas.begin(); iter != horizontal_additional_formulas.end(); ++iter) {
           new_horizontal_formulas.push_back(*iter);
         }
@@ -1072,9 +1209,14 @@ void Layout::calculate_min_max_size() {
         max_width = std::max(max_width, new_max_width);
         //columns = build_columns(new_boxes_rects);
         //vertical_formulas = build_vertical_formulas(columns);
+        if(min_width == m_min_fixed_box_width && max_width == MAX_LAYOUT_SIZE) {
+          break;
+        }
+      }
+      if(min_width == m_min_fixed_box_width && max_width == MAX_LAYOUT_SIZE) {
+        break;
       }
     }
-    m_max_size.setWidth(MAX_LAYOUT_SIZE);
     new_boxes_rects = boxes_rects;
     for(auto width = m_min_fixed_box_width; width <= m_total_fixed_box_width; width += m_min_fixed_box_width) {
       //auto solution = m_horizontal_solver.solve(horizontal_formulas, width);
@@ -1088,7 +1230,8 @@ void Layout::calculate_min_max_size() {
       for(auto& solution : solutions) {
         adjust_horizontal_layout(solution, rows, new_boxes_rects);
         auto new_vertical_formulas = build_vertical_formulas(build_columns(new_boxes_rects));
-        auto new_max_height = static_cast<int>(m_vertical_solver.solve_maximum(new_vertical_formulas));
+        //auto new_max_height = static_cast<int>(m_vertical_solver.solve_maximum(new_vertical_formulas));
+        auto new_max_height = static_cast<int>(m_vertical_solver.solve_maximum(new_vertical_formulas, m_total_fixed_box_height));
         for(auto iter = vertical_additional_formulas.begin(); iter != vertical_additional_formulas.end(); ++iter) {
           new_vertical_formulas.push_back(*iter);
         }
@@ -1098,19 +1241,33 @@ void Layout::calculate_min_max_size() {
         min_width = std::min(min_width, width);
         min_height = std::min(min_height, new_min_height);
         max_height = std::max(max_height, new_max_height);
+        if(min_height == m_min_fixed_box_height && max_height == MAX_LAYOUT_SIZE) {
+          break;
+        }
         //rows = build_rows(new_boxes_rects);
         //horizontal_formulas = build_horizontal_formulas(rows);
       }
+      if(min_height == m_min_fixed_box_height && max_height == MAX_LAYOUT_SIZE) {
+        break;
+      }
     }
-    m_min_size.setWidth(min_width);
-    m_min_size.setHeight(min_height);
+    if(min_width == MAX_LAYOUT_SIZE) {
+      m_min_size.setWidth(m_rect.width());
+    } else {
+      m_min_size.setWidth(min_width);
+    }
+    if(min_height == MAX_LAYOUT_SIZE) {
+      m_min_size.setHeight(m_rect.height());
+    } else {
+      m_min_size.setHeight(min_height);
+    }
     if(max_width == -1) {
-      m_max_size.setWidth(min_width);
+      m_max_size.setWidth(m_min_size.width());
     } else {
       m_max_size.setWidth(max_width);
     }
     if(max_height == -1) {
-      m_max_size.setHeight(min_height);
+      m_max_size.setHeight(m_min_size.height());
     } else {
       m_max_size.setHeight(max_height);
     }

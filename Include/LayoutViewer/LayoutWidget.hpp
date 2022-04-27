@@ -15,7 +15,7 @@ namespace Dali {
 
       //void adjust_size_fit_layout();
 
-      void set_layout(std::shared_ptr<Layout> layout);
+      bool set_layout(std::shared_ptr<Layout> layout);
 
       QSize get_min_size() const;
       QSize get_max_size() const;

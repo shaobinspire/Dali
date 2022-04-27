@@ -20,7 +20,7 @@ std::shared_ptr<Layout> Parser::parse(const nlohmann::json& m_json) {
     if(item.contains("name")) {
       box->set_name(item["name"].get<std::string>());
     }
-    auto top_left = QPoint{item["x"], item["y"]};
+    auto top_left = QPoint{item["left"], item["top"]};
     auto width = -1;
     if(item.contains("width")) {
       width = item["width"];

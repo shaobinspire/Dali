@@ -22,10 +22,10 @@ json& get_layout_schema() {
             "name": {
               "type": "string"
             },
-            "x": {
+            "left": {
               "type": "number"
             },
-            "y": {
+            "top": {
               "type": "number"
             },
             "width": {
@@ -50,8 +50,8 @@ json& get_layout_schema() {
             }
           },
           "required": [
-            "x",
-            "y",
+            "left",
+            "top",
             "horizontal",
             "vertical"
           ],

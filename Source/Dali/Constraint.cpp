@@ -39,9 +39,9 @@ auto to_property(const std::string& value) {
     return Constraint::Property::HEIGHT;
   } else if(value == "width" || value == "width()") {
     return Constraint::Property::WIDTH;
-  } else if(value == "x") {
+  } else if(value == "left") {
     return Constraint::Property::LEFT;
-  } else if(value == "y") {
+  } else if(value == "top") {
     return Constraint::Property::TOP;
   } else if(value == "right") {
     return Constraint::Property::RIGHT;

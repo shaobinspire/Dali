@@ -141,13 +141,55 @@ std::vector<std::unordered_map<std::string, double>> Solver::solve(const expr_ve
   return solutions;
 }
 
-double Solver::solve_maximum(const expr_vector& formulas) {
+double Solver::solve_maximum(const expr_vector& formulas, int threshold) {
   auto result = solve(formulas, MAX_LAYOUT_SIZE);
-  if(result.empty()) {
-    return -1;
+  if(!result.empty()) {
+    return result[LAYOUT_NAME];
   }
-  return result[LAYOUT_NAME];
+  m_solver.push();
+  auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
+  auto new_formulas = formulas;
+  new_formulas.push_back(declare_variable(LAYOUT_NAME) > threshold);
+  for(unsigned i = 0; i < new_formulas.size(); ++i) {
+    qDebug() << new_formulas[i].to_string().c_str();
+  }
+  m_solver.add(new_formulas);
+  if(m_solver.check() == check_result::sat) {
+    return MAX_LAYOUT_SIZE;
+  }
+  return -1;
 }
+
+//double Solver::solve_maximum(const expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables) {
+//  for(unsigned i = 0; i < formulas.size(); ++i) {
+//    qDebug() << formulas[i].to_string().c_str();
+//  }
+//  m_solver.push();
+//  m_solver.add(formulas);
+//  auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
+//  auto max = static_cast<double>(-1);
+//  if()
+//  while(true) {
+//    if(m_solver.check() != check_result::sat) {
+//      break;
+//    }
+//    auto model = m_solver.get_model();
+//    auto changed_expr = expr_vector(m_context);
+//    auto debug = qDebug();
+//    for(unsigned int i = 0; i < model.num_consts(); ++i) {
+//      auto decl = model.get_const_decl(i);
+//      debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
+//      if(!unchanged_variables.contains(decl.name().str())) {
+//        changed_expr.push_back(decl() != model.eval(decl()));
+//      }
+//      if(decl.name().str() == LAYOUT_NAME) {
+//        max = std::max(max, model.get_const_interp(decl).as_double());
+//      }
+//    }
+//    m_solver.add(mk_or(changed_expr));
+//  }
+//  return max;
+//}
 
 double Solver::solve_minimum(const expr_vector& formulas) {
   m_solver.push();
@@ -178,16 +220,19 @@ double Solver::solve_minimum(const expr_vector& formulas, const std::unordered_s
   m_solver.add(formulas);
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
   auto min = static_cast<double>(MAX_LAYOUT_SIZE);
+  auto count = 0;
   while(true) {
     if(m_solver.check() != check_result::sat) {
       break;
     }
+    ++count;
+    qDebug() << "solve_minimum:" << count;
     auto model = m_solver.get_model();
-    auto solution = std::unordered_map<std::string, double>();
     auto changed_expr = expr_vector(m_context);
+    auto debug = qDebug();
     for(unsigned int i = 0; i < model.num_consts(); ++i) {
       auto decl = model.get_const_decl(i);
-      solution[decl.name().str()] = model.get_const_interp(decl).as_double();
+      debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
       if(!unchanged_variables.contains(decl.name().str())) {
         changed_expr.push_back(decl() != model.eval(decl()));
       }
@@ -197,9 +242,9 @@ double Solver::solve_minimum(const expr_vector& formulas, const std::unordered_s
     }
     m_solver.add(mk_or(changed_expr));
   }
-  if(min == MAX_LAYOUT_SIZE) {
-    return 0;
-  }
+  //if(min == MAX_LAYOUT_SIZE) {
+  //  return 0;
+  //}
   return min;
 }
 

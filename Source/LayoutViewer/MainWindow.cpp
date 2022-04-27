@@ -163,6 +163,8 @@ void MainWindow::open() {
   setWindowFilePath(m_file_name);
   statusBar()->showMessage(QString(tr("Opened \"%1\"")).arg(m_file_name.split("/").back()));
   m_editor->load_json(m_file_name);
+  m_refresh_action->setEnabled(true);
+  m_show_original_action->setEnabled(true);
 }
 
 void MainWindow::refresh() {
@@ -243,18 +245,17 @@ bool MainWindow::maybe_save() {
 
 void MainWindow::parse_result(bool is_failed) {
   if(is_failed) {
-    m_refresh_action->setEnabled(false);
-    m_show_original_action->setEnabled(true);
     m_error_output->setText(QString::fromStdString(m_editor->get_errors()));
     m_layout_widget->set_layout(nullptr);
     m_layout_size_label->setText("");
     m_size_label->setText("");
   } else {
-    m_refresh_action->setEnabled(true);
-    m_show_original_action->setEnabled(true);
     m_error_output->setText("");
     auto layout = m_parser.parse(m_editor->get_json());
-    m_layout_widget->set_layout(layout);
+    if(!m_layout_widget->set_layout(layout)) {
+      m_error_output->setText("The layout is invalid.");
+      return;
+    }
     m_layout_widget->adjust_size();
     update_layout_size_message();
     auto min_size = m_layout_widget->get_min_size();

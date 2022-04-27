@@ -7,33 +7,24 @@
             "width": 200,
             "height": 200,
             "horizontal": "fixed",
-            "vertical": "fixed"
-        },
-        {
-            "name": "B",
-            "left": 200,
-            "top": 0,
-            "width": 200,
-            "height": 200,
-            "horizontal": "take_space",
             "vertical": "take_space"
         },
         {
-            "name": "C",
+            "name": "B",
             "left": 0,
             "top": 200,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
-            "vertical": "take_space"
+            "vertical": "fixed"
         },
         {
-            "name": "D",
-            "left": 200,
-            "top": 200,
+            "name": "C",
+            "left": 0,
+            "top": 400,
             "width": 200,
             "height": 200,
-            "horizontal": "fixed",
+            "horizontal": "take_space",
             "vertical": "fixed"
         }
     ]

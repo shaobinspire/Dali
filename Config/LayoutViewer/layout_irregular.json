@@ -40,7 +40,7 @@
             "name": "E",
             "width": 100,
             "height": 300,
-            "left": 800,
+            "left": 900,
             "top": 0,
             "horizontal": "take_space",
             "vertical": "take_space"
@@ -72,5 +72,15 @@
             "horizontal": "fixed",
             "vertical": "fixed"
         }
+    ],
+    "constraints": [
+        "A.width >= 0",
+        "B.width >= 0",
+        "D.width >= 0",
+        "E.width >= 0",
+        "A.height >= 0",
+        "B.height >= 0",
+        "D.height >= 0",
+        "E.height >= 0"
     ]
 }

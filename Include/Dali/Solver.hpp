@@ -29,7 +29,8 @@ namespace Details {
       std::unordered_map<std::string, double> solve(const z3::expr_vector& formulas, int value);
       std::vector<std::unordered_map<std::string, double>> solve(const z3::expr_vector& formulas,
         const std::unordered_set<std::string>& unchanged_variables, int value);
-      double solve_maximum(const z3::expr_vector& formulas);
+      double solve_maximum(const z3::expr_vector& formulas, int threshold);
+      //double solve_maximum(const z3::expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables);
       double solve_minimum(const z3::expr_vector& formulas);
       double solve_minimum(const z3::expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables);
 
