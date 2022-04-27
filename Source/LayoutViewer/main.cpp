@@ -18,9 +18,10 @@ int main(int argc, char** argv) {
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
     Qt::HighDpiScaleFactorRoundingPolicy::Floor);
+  QGuiApplication::setApplicationDisplayName(QObject::tr("Dali Layout Viewer"));
   auto application = new QApplication(argc, argv);
   application->setOrganizationName(QObject::tr("Spire Trading Inc"));
-  application->setApplicationName(QObject::tr("DaliViewer"));
+  application->setApplicationName(QObject::tr("Dali Layout Viewer"));
   MainWindow window;
   window.show();
   application->exec();

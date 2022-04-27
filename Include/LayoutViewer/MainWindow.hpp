@@ -21,7 +21,7 @@ namespace Dali {
       JsonEditor* m_editor;
       QTextEdit* m_error_output;
       QMenu* m_view_menu;
-      QLabel* m_file_name_label;
+      QLabel* m_window_size_label;
       QLabel* m_layout_size_label;
       QLabel* m_size_label;
       QSpinBox* m_width_spin_box;

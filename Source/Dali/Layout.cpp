@@ -93,8 +93,10 @@ void Layout::add_box(LayoutBox* box) {
   if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
     m_min_fixed_box_height = std::min(m_min_fixed_box_height, box->get_rect().height());
     m_total_fixed_box_height += box->get_rect().height();
-    m_rect = m_rect.united(box->get_rect());
   }
+  m_rect = m_rect.united(box->get_rect());
+  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
+  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
   if(box->get_name().empty()) {
     box->set_name("DALI_LAYOUT_BOX" + m_boxes.size());
     box->set_name_visible(false);
@@ -186,9 +188,11 @@ void Layout::resize(const QSize& size) {
   //  adjust_vertical_layout(heights, columns, boxes_rects);
   //}
   m_boxes_rects = boxes_rects;
+  auto rect = QRect();
   auto area = 0;
   for(auto i = 0; i < get_box_count(); ++i) {
     area += boxes_rects[i].width() * boxes_rects[i].height();
+    rect = rect.united(boxes_rects[i]);
   }
   auto area2 = (boxes_rects.back().bottom() + 1) * (boxes_rects.back().right() + 1);
   if(area > area2) {
@@ -202,6 +206,7 @@ void Layout::resize(const QSize& size) {
   for(auto i = 0; i < get_box_count(); ++i) {
     m_boxes[i]->set_rect(boxes_rects[i]);
   }
+  m_rect.setSize(rect.size());
 
   //qDebug() << size;
   //static auto start = std::chrono::high_resolution_clock::now();

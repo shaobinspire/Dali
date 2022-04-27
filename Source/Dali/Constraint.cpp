@@ -90,12 +90,14 @@ std::vector<ExpressionToken> split(const std::string& expression) {
   //auto start = std::chrono::high_resolution_clock::now();
   auto list = std::vector<ExpressionToken>();
   auto token_start = expression.begin();
-  for(auto iter = expression.begin(); iter != expression.end(); ++iter) {
+  for(auto iter = token_start; iter != expression.end(); ++iter) {
     if(*iter == '(' || *iter == ')' || *iter == '+' || *iter == '-' || *iter == '*' || *iter == '/') {
       if(token_start != iter) {
         auto str = std::string(token_start, iter);
         trim(str);
         list.push_back({str, false});
+      } else if(*iter == '+' || *iter == '-' || *iter == '*' || *iter == '/') {
+        return list;
       }
       list.push_back({std::string(1, *iter), true});
       token_start = iter + 1;

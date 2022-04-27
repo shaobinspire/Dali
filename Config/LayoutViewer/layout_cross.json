@@ -1,0 +1,95 @@
+{
+    "layout": [
+        {
+            "name": "1",
+            "x": 0,
+            "y": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "2",
+            "x": 200,
+            "y": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "3",
+            "x": 400,
+            "y": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "4",
+            "x": 0,
+            "y": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "5",
+            "x": 200,
+            "y": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "6",
+            "x": 400,
+            "y": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "7",
+            "x": 0,
+            "y": 400,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "8",
+            "x": 200,
+            "y": 400,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "9",
+            "x": 400,
+            "y": 400,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        }
+    ],
+    "constraints": [
+        "2.width >= 0",
+        "4.width >= 0",
+        "6.width >= 0",
+        "8.width >= 0",
+        "2.height >= 0",
+        "4.height >= 0",
+        "6.height >= 0",
+        "8.height >= 0"
+    ]
+}

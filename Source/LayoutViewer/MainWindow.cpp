@@ -30,8 +30,8 @@ MainWindow::MainWindow() {
   create_menu();
   create_dock_windows();
   create_size_setting_tool_bar();
-  m_file_name_label = new QLabel();
-  statusBar()->addWidget(m_file_name_label);
+  m_window_size_label = new QLabel();
+  statusBar()->addPermanentWidget(m_window_size_label);
   m_layout_size_label = new QLabel();
   statusBar()->addPermanentWidget(m_layout_size_label);
   m_size_label = new QLabel();
@@ -160,8 +160,9 @@ void MainWindow::open() {
     return;
   }
   m_file_name = file_name;
+  setWindowFilePath(m_file_name);
+  statusBar()->showMessage(QString(tr("Opened \"%1\"")).arg(m_file_name.split("/").back()));
   m_editor->load_json(m_file_name);
-  m_file_name_label->setText(m_file_name.split("/").back());
 }
 
 void MainWindow::refresh() {
@@ -265,6 +266,9 @@ void MainWindow::parse_result(bool is_failed) {
 }
 
 void MainWindow::update_layout_size_message() {
+  auto window_rect = m_layout_widget->rect();
+  m_window_size_label->setText(QString("Window Size: %1x%2    ")
+    .arg(window_rect.width()).arg(window_rect.height()));
   auto rect = m_layout_widget->get_layout_rect();
   m_layout_size_label->setText(QString("Layout Size: %1x%2    ")
     .arg(rect.width()).arg(rect.height()));
