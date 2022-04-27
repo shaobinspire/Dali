@@ -183,7 +183,6 @@ expr get_formula(context& context, const std::vector<Constraint::Element>& eleme
         if(variable.m_name.empty()) {
           stack.push(context.int_const(LAYOUT_NAME));
         } else {
-          //stack.push(context.int_const(variable.m_name.c_str()));
           stack.push(context.int_const(variable.m_content.c_str()));
         }
       },
@@ -239,7 +238,6 @@ Constraint::ComparisonOperator Constraint::get_comparsion_operator() const {
 }
 
 void Constraint::parse() {
-  //auto start = std::chrono::high_resolution_clock::now();
   auto reg_exp = std::regex("(=+|[<>!]=?)");
   auto match = std::smatch();
   if(!std::regex_search(m_expression, match, reg_exp)) {

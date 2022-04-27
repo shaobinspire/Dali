@@ -2,8 +2,8 @@
     "layout": [
         {
             "name": "A",
-            "x": 0,
-            "y": 0,
+            "left": 0,
+            "top": 0,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -11,8 +11,8 @@
         },
         {
             "name": "B",
-            "x": 200,
-            "y": 0,
+            "left": 200,
+            "top": 0,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -20,8 +20,8 @@
         },
         {
             "name": "C",
-            "x": 400,
-            "y": 0,
+            "left": 400,
+            "top": 0,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -29,8 +29,8 @@
         },
         {
             "name": "D",
-            "x": 0,
-            "y": 200,
+            "left": 0,
+            "top": 200,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -38,8 +38,8 @@
         },
         {
             "name": "E",
-            "x": 200,
-            "y": 200,
+            "left": 200,
+            "top": 200,
             "width": 200,
             "height": 200,
             "horizontal": "fixed",
@@ -47,8 +47,8 @@
         },
         {
             "name": "F",
-            "x": 400,
-            "y": 200,
+            "left": 400,
+            "top": 200,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -56,8 +56,8 @@
         },
         {
             "name": "G",
-            "x": 0,
-            "y": 400,
+            "left": 0,
+            "top": 400,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -65,8 +65,8 @@
         },
         {
             "name": "H",
-            "x": 200,
-            "y": 400,
+            "left": 200,
+            "top": 400,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
@@ -74,22 +74,16 @@
         },
         {
             "name": "I",
-            "x": 400,
-            "y": 400,
+            "left": 400,
+            "top": 400,
             "width": 200,
             "height": 200,
             "horizontal": "take_space",
             "vertical": "take_space"
         }
     ],
-    "constraints": [
-        "//B.width >= 0",
-        "//H.width >= 0",
-        "//B.height >= 0",
-        "//H.height >= 0",
-        "//D.width >= 0",
-        "//F.width >= 0",
-        "//D.height >= 0",
-        "//F.height >= 0"
+    "constraints": [ 
+       "D.height = F.height",
+       "B.width = H.width"
     ]
 }

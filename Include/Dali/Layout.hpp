@@ -56,6 +56,8 @@ namespace Dali {
       std::vector<LayoutBox*> m_boxes;
       std::vector<QRect> m_boxes_rects;
       std::unordered_map<std::string, int> m_name_map;
+      std::unordered_set<std::string> m_horizontal_fixed_boxes;
+      std::unordered_set<std::string> m_vertical_fixed_boxes;
       //std::vector<std::vector<int>> m_rows;
       //std::vector<std::vector<int>> m_columns;
       //std::map<int, std::vector<int>, std::greater<int>> m_reverse_horizontal_map;

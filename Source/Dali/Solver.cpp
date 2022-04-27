@@ -30,108 +30,48 @@ void Solver::add_const_formula(const expr_vector& formulas) {
   //}
 }
 
-//  m_solver.reset();
-//}
-
-//std::unordered_map<std::string, double> Solver::solve(const Constraints& sum_constraints, int value) {
-//  m_solver.push();
-//  for(auto i = 0; i < sum_constraints.get_constraint_count(); ++i) {
-//    if(auto formula = sum_constraints.get_constraint(i).convert_to_formula(m_context)) {
-//      m_solver.add(formula);
-//    }
-//  }
-//  m_solver.add(m_context.real_const(layout_name) == m_context.int_val(value));
-//  auto status = m_solver.check();
-//  auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-//  if(status != check_result::sat) {
-//    return std::unordered_map<std::string, double>();
-//    //return std::vector<std::pair<std::string, double>>();
-//  }
-//  //auto result = std::vector<std::pair<std::string, double>>();
-//  auto result = std::unordered_map<std::string, double>();
-//  auto model = m_solver.get_model();
-//  for(unsigned int i = 0; i < model.num_consts(); ++i) {
-//    auto decl = model.get_const_decl(i);
-//    auto value = model.get_const_interp(decl).as_double();
-//    //if(value < 0) {
-//    //  result.clear();
-//    //  return result;
-//    //}
-//    result[decl.name().str()] = value;
-//    //result.push_back({decl.name().str(),
-//    //  model.get_const_interp(decl).as_double()});
-//  }
-//  return result;
-//}
-//
-//std::unordered_map<std::string, double> Solver::solve(const std::vector<expr>& sum_constraints, int value) {
-//  m_solver.push();
-//  for(auto& e : sum_constraints) {
-//    m_solver.add(e);
-//  }
-//  m_solver.add(m_context.int_const(layout_name) == m_context.int_val(value));
-//  auto status = m_solver.check();
-//  auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-//  if(status != check_result::sat) {
-//    return std::unordered_map<std::string, double>();
-//  }
-//  auto result = std::unordered_map<std::string, double>();
-//  auto model = m_solver.get_model();
-//  for(unsigned int i = 0; i < model.num_consts(); ++i) {
-//    auto decl = model.get_const_decl(i);
-//    auto value = model.get_const_interp(decl).as_double();
-//    if(value < 0) {
-//      result.clear();
-//      return result;
-//    }
-//    result[decl.name().str()] = value;
-//  }
-//  return result;
-//}
-
-std::unordered_map<std::string, double> Solver::solve(const expr_vector& formulas, int value) {
+Solver::SolveResult Solver::solve(const expr_vector& formulas, int value) {
+  //for(unsigned i = 0; i < formulas.size(); ++i) {
+  //  qDebug() << formulas[i].to_string().c_str();
+  //}
   m_solver.push();
-  for(unsigned i = 0; i < formulas.size(); ++i) {
-    qDebug() << formulas[i].to_string().c_str();
-  }
-  m_solver.add(formulas);
-  m_solver.add(m_context.int_const(LAYOUT_NAME) == m_context.int_val(value));
-  auto status = m_solver.check();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-  auto result = std::unordered_map<std::string, double>();
-  if(status != check_result::sat) {
+  m_solver.add(formulas);
+  m_solver.add(m_context.int_const(LAYOUT_NAME) == value);
+  auto result = Solver::SolveResult();
+  if(m_solver.check() != check_result::sat) {
     return result;
   }
   auto model = m_solver.get_model();
-  for(unsigned int i = 0; i < model.num_consts(); ++i) {
-    //auto decl = model.get_const_decl(i);
-    auto v = model[i];
-    result[v.name().str()] = model.get_const_interp(v).as_double();
+  for(auto i = static_cast<unsigned>(0); i < model.num_consts(); ++i) {
+    auto decl = model.get_const_decl(i);
+    result[decl.name().str()] = model.get_const_interp(decl).as_double();
   }
   return result;
 }
 
-std::vector<std::unordered_map<std::string, double>> Solver::solve(const expr_vector& formulas,
-  const std::unordered_set<std::string>& unchanged_variables, int value) {
+std::vector<Solver::SolveResult> Solver::solve(const expr_vector& formulas,
+    const std::unordered_set<std::string>& unchanged_variables, int value) {
+  //for(unsigned i = 0; i < formulas.size(); ++i) {
+  //  qDebug() << formulas[i].to_string().c_str();
+  //}
   m_solver.push();
-  for(unsigned i = 0; i < formulas.size(); ++i) {
-    qDebug() << formulas[i].to_string().c_str();
-  }
-  m_solver.add(formulas);
-  m_solver.add(m_context.int_const(LAYOUT_NAME) == m_context.int_val(value));
-  auto solutions = std::vector<std::unordered_map<std::string, double>>();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
+  m_solver.add(formulas);
+  m_solver.add(m_context.int_const(LAYOUT_NAME) == value);
+  auto solutions = std::vector<Solver::SolveResult>();
   while(true) {
     if(m_solver.check() != check_result::sat) {
-      return solutions;
+      break;
     }
     auto model = m_solver.get_model();
-    auto solution = std::unordered_map<std::string, double>();
+    auto solution = Solver::SolveResult();
     auto changed_expr = expr_vector(m_context);
-    for(unsigned int i = 0; i < model.num_consts(); ++i) {
+    for(auto i = static_cast<unsigned>(0); i < model.num_consts(); ++i) {
       auto decl = model.get_const_decl(i);
-      solution[decl.name().str()] = model.get_const_interp(decl).as_double();
-      if(!unchanged_variables.contains(decl.name().str())) {
+      auto name = decl.name().str();
+      solution[name] = model.get_const_interp(decl).as_double();
+      if(!unchanged_variables.contains(name)) {
         changed_expr.push_back(decl() != model.eval(decl()));
       }
     }
@@ -141,117 +81,82 @@ std::vector<std::unordered_map<std::string, double>> Solver::solve(const expr_ve
   return solutions;
 }
 
-double Solver::solve_maximum(const expr_vector& formulas, int threshold) {
+double Solver::solve_maximum(const expr_vector& formulas, int lower_bound) {
   auto result = solve(formulas, MAX_LAYOUT_SIZE);
   if(!result.empty()) {
     return result[LAYOUT_NAME];
   }
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-  auto new_formulas = formulas;
-  new_formulas.push_back(declare_variable(LAYOUT_NAME) > threshold);
-  for(unsigned i = 0; i < new_formulas.size(); ++i) {
-    qDebug() << new_formulas[i].to_string().c_str();
-  }
-  m_solver.add(new_formulas);
+  m_solver.add(declare_variable(LAYOUT_NAME) > lower_bound);
+  m_solver.add(formulas);
   if(m_solver.check() == check_result::sat) {
     return MAX_LAYOUT_SIZE;
   }
   return -1;
 }
 
-//double Solver::solve_maximum(const expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables) {
-//  for(unsigned i = 0; i < formulas.size(); ++i) {
-//    qDebug() << formulas[i].to_string().c_str();
-//  }
-//  m_solver.push();
-//  m_solver.add(formulas);
-//  auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-//  auto max = static_cast<double>(-1);
-//  if()
-//  while(true) {
-//    if(m_solver.check() != check_result::sat) {
-//      break;
-//    }
-//    auto model = m_solver.get_model();
-//    auto changed_expr = expr_vector(m_context);
-//    auto debug = qDebug();
-//    for(unsigned int i = 0; i < model.num_consts(); ++i) {
-//      auto decl = model.get_const_decl(i);
-//      debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
-//      if(!unchanged_variables.contains(decl.name().str())) {
-//        changed_expr.push_back(decl() != model.eval(decl()));
-//      }
-//      if(decl.name().str() == LAYOUT_NAME) {
-//        max = std::max(max, model.get_const_interp(decl).as_double());
-//      }
-//    }
-//    m_solver.add(mk_or(changed_expr));
-//  }
-//  return max;
-//}
-
 double Solver::solve_minimum(const expr_vector& formulas) {
   m_solver.push();
-  for(unsigned i = 0; i < formulas.size(); ++i) {
-    qDebug() << formulas[i].to_string().c_str();
-  }
-  m_solver.add(formulas);
-  auto status = m_solver.check();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-  if(status != check_result::sat) {
+  //for(unsigned i = 0; i < formulas.size(); ++i) {
+  //  qDebug() << formulas[i].to_string().c_str();
+  //}
+  m_solver.add(formulas);
+  if(m_solver.check() != check_result::sat) {
     return 0;
   }
   auto model = m_solver.get_model();
-  for(unsigned int i = 0; i < model.num_consts(); ++i) {
-    auto v = model[i];
-    if(v.name().str() == LAYOUT_NAME) {
-      return model.get_const_interp(v).as_double();
+  for(auto i = static_cast<unsigned>(0); i < model.num_consts(); ++i) {
+    auto decl = model.get_const_decl(i);
+    if(decl.name().str() == LAYOUT_NAME) {
+      return model.get_const_interp(decl).as_double();
     }
   }
   return 0;
 }
 
-double Solver::solve_minimum(const expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables) {
-  for(unsigned i = 0; i < formulas.size(); ++i) {
-    qDebug() << formulas[i].to_string().c_str();
-  }
+double Solver::solve_minimum(const expr_vector& formulas,
+    const std::unordered_set<std::string>& unchanged_variables,
+    int lower_bound, int upper_bound) {
+  //for(unsigned i = 0; i < formulas.size(); ++i) {
+  //  qDebug() << formulas[i].to_string().c_str();
+  //}
   m_solver.push();
-  m_solver.add(formulas);
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
+  m_solver.add(declare_variable(LAYOUT_NAME) <= upper_bound);
+  m_solver.add(formulas);
   auto min = static_cast<double>(MAX_LAYOUT_SIZE);
-  auto count = 0;
   while(true) {
     if(m_solver.check() != check_result::sat) {
       break;
     }
-    ++count;
-    qDebug() << "solve_minimum:" << count;
     auto model = m_solver.get_model();
     auto changed_expr = expr_vector(m_context);
-    auto debug = qDebug();
-    for(unsigned int i = 0; i < model.num_consts(); ++i) {
+    //auto debug = qDebug();
+    for(auto i = static_cast<unsigned>(0); i < model.num_consts(); ++i) {
       auto decl = model.get_const_decl(i);
-      debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
-      if(!unchanged_variables.contains(decl.name().str())) {
+      auto name = decl.name().str();
+      //debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
+      if(!unchanged_variables.contains(name)) {
         changed_expr.push_back(decl() != model.eval(decl()));
       }
-      if(decl.name().str() == LAYOUT_NAME) {
+      if(name == LAYOUT_NAME) {
         min = std::min(min, model.get_const_interp(decl).as_double());
       }
     }
+    if(min == lower_bound) {
+      break;
+    }
     m_solver.add(mk_or(changed_expr));
   }
-  //if(min == MAX_LAYOUT_SIZE) {
-  //  return 0;
-  //}
   return min;
 }
 
 bool Solver::check(const expr_vector& formulas) {
   m_solver.push();
-  m_solver.add(formulas);
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
+  m_solver.add(formulas);
   return m_solver.check() == check_result::sat;
 }
 

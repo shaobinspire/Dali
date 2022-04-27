@@ -18,21 +18,24 @@ namespace Details {
 
   class Solver {
     public:
+      using SolveResult = std::unordered_map<std::string, double>;
+
       Solver();
 
       void add_const_formula(const z3::expr_vector& formulas);
 
-      //void reset();
+      SolveResult solve(const z3::expr_vector& formulas, int value);
 
-      //std::unordered_map<std::string, double> solve(const Constraints& sum_constraints, int value);
-      //std::unordered_map<std::string, double> solve(const std::vector<z3::expr>& sum_constraints, int value);
-      std::unordered_map<std::string, double> solve(const z3::expr_vector& formulas, int value);
-      std::vector<std::unordered_map<std::string, double>> solve(const z3::expr_vector& formulas,
+      std::vector<SolveResult> solve(const z3::expr_vector& formulas,
         const std::unordered_set<std::string>& unchanged_variables, int value);
-      double solve_maximum(const z3::expr_vector& formulas, int threshold);
-      //double solve_maximum(const z3::expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables);
+
+      double solve_maximum(const z3::expr_vector& formulas, int lower_bound);
+
       double solve_minimum(const z3::expr_vector& formulas);
-      double solve_minimum(const z3::expr_vector& formulas, const std::unordered_set<std::string>& unchanged_variables);
+
+      double solve_minimum(const z3::expr_vector& formulas,
+        const std::unordered_set<std::string>& unchanged_variables,
+        int lower_bound, int upper_bound);
 
       bool check(const z3::expr_vector& formulas);
 
