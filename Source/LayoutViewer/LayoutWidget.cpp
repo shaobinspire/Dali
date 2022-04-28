@@ -47,14 +47,18 @@ void LayoutWidget::adjust_size() {
 bool LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   setMinimumSize(0, 0);
   setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-  m_layout.reset();
-  if(!layout) {
-    return false;
-  }
-  if(!layout->build()) {
-    return false;
-  }
   m_layout = layout;
+  if(!m_layout) {
+    return false;
+  }
+  if(m_is_show_original) {
+    m_layout->build_constraints();
+    return true;
+  }
+  if(!m_layout->build()) {
+    m_layout.reset();
+    return false;
+  }
   setMinimumSize(m_layout->get_min_size());
   //setMaximumSize(m_layout->get_max_size());
   return true;
@@ -100,6 +104,10 @@ Layout::Status LayoutWidget::get_layout_status() const {
 
 void LayoutWidget::show_original_layout(bool is_show_original) {
   m_is_show_original = is_show_original;
+}
+
+bool LayoutWidget::is_show_original_layout() const {
+  return m_is_show_original;
 }
 
 QSize LayoutWidget::sizeHint() const {

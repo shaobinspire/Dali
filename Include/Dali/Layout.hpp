@@ -41,6 +41,8 @@ namespace Dali {
 
       void resize(const QSize& size);
 
+      void build_constraints();
+
       bool build();
 
       int get_index_by_name(const std::string& name);

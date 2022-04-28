@@ -17,6 +17,7 @@
 #include "LayoutViewer/LayoutWidget.hpp"
 
 using namespace Dali;
+using namespace nlohmann;
 
 MainWindow::MainWindow() {
   auto central_widget = new QWidget(this);
@@ -197,6 +198,7 @@ void MainWindow::show_original() {
   m_error_output->setText("");
   m_layout_widget->show_original_layout(true);
   m_editor->load(m_file_name);
+  centralWidget()->adjustSize();
   adjustSize();
   m_layout_widget->update();
   m_layout_widget->show_original_layout(false);
@@ -229,16 +231,26 @@ bool MainWindow::save_file(const QString& file_name) {
 }
 
 void MainWindow::on_text_changed() {
-  auto parser = Parser();
-  auto result = parser.verify(m_editor->toPlainText().toStdString());
-  if(!result.first) {
-    m_error_output->setText(QString::fromStdString(result.second));
+  auto handle_error = [=] (const std::string& error) {
+    m_error_output->setText(QString::fromStdString(error));
     m_layout_widget->set_layout(nullptr);
     m_layout_size_label->setText("");
     m_size_label->setText("");
+  };
+  auto j = json();
+  try {
+    j = json::parse(m_editor->toPlainText().toStdString());
+  } catch(json::exception& e) {
+    handle_error(e.what());
+    m_layout_widget->update();
+    return;
+  }
+  auto result = m_validator.validate(j);
+  if(!result.first) {
+    handle_error(result.second);
   } else {
     m_error_output->setText("");
-    auto layout = parser.parse();
+    auto layout = Parser::parse(j);
     if(!layout.second.empty()) {
       m_error_output->setText(QString::fromStdString(layout.second));
       return;
@@ -248,15 +260,16 @@ void MainWindow::on_text_changed() {
       m_layout_widget->update();
       return;
     }
-    m_layout_widget->adjust_size();
-    update_layout_size_message();
-    auto min_size = m_layout_widget->get_min_size();
-    auto max_size = m_layout_widget->get_max_size();
-    m_size_label->setText(QString("Min: %1x%2  Max: %3x%4").arg(min_size.width()).
-      arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
+    if(!m_layout_widget->is_show_original_layout()) {
+      m_layout_widget->adjust_size();
+      update_layout_size_message();
+      auto min_size = m_layout_widget->get_min_size();
+      auto max_size = m_layout_widget->get_max_size();
+      m_size_label->setText(QString("Min: %1x%2  Max: %3x%4").arg(min_size.width()).
+        arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
+    }
   }
   m_layout_widget->update();
-
 }
 
 bool MainWindow::maybe_save() {

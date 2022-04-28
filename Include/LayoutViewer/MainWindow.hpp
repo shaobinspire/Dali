@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QSpinBox>
 #include "Dali/Parser.hpp"
+#include "Dali/LayoutValidator.hpp"
 #include "LayoutViewer/JsonEditor.hpp"
 
 namespace Dali {
@@ -17,7 +18,6 @@ namespace Dali {
       void closeEvent(QCloseEvent *event) override;
 
     private:
-      //Parser m_parser;
       LayoutWidget* m_layout_widget;
       JsonEditor* m_editor;
       QTextEdit* m_error_output;
@@ -30,6 +30,7 @@ namespace Dali {
       QAction* m_refresh_action;
       QAction* m_show_original_action;
       QString m_file_name;
+      LayoutValidator m_validator;
 
       void create_dock_windows();
       void create_menu();

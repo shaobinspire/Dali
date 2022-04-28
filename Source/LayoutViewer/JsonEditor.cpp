@@ -65,3 +65,4 @@ void JsonEditor::update_line_number_widget(const QRect& rect, int dy) {
 void JsonEditor::update_line_number_widget_width() {
   setViewportMargins(m_line_number_widget->sizeHint().width(), 0, 0, 0);
 }
+

@@ -30,6 +30,8 @@ namespace Dali {
 
       void show_original_layout(bool is_show_original);
 
+      bool is_show_original_layout() const;
+
       QSize sizeHint() const override;
 
     protected:

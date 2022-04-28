@@ -423,35 +423,19 @@ void Layout::resize(const QSize& size) {
   m_rect.setSize(rect.size());
 }
 
-bool Layout::build() {
-  if(m_area != m_rect.width() * m_rect.height()) {
-    return false;
-  }
+void Layout::build_constraints() {
   m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
   m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
   m_position_solver.add_const_formula(m_position_constraints.convert(m_position_solver.get_context()));
   auto horizontal_expanding_box = std::vector<std::pair<int, int>>();
   auto vertical_expanding_box = std::vector<std::pair<int, int>>();
-  //auto horizontal_fixed_boxes = std::unordered_set<std::string>();
-  //auto vertical_fixed_boxes = std::unordered_set<std::string>();
-  //auto horizontal_additional_formulas = m_horizontal_solver.create_expr_vector();
-  //auto vertical_additional_formulas = m_vertical_solver.create_expr_vector();
-  //auto boxes_rects = std::vector<QRect>();
   for(auto i = 0; i < get_box_count(); ++i) {
     auto box = m_boxes[i];
-    //boxes_rects.push_back(box->get_rect());
     if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
-      //horizontal_fixed_boxes.insert(box->get_name());
       m_horizontal_constraints.add_local_constraint(Constraint(
         fmt::format("{}.width = {}", box->get_name(), box->get_rect().width())),
           true);
     } else {
-      //horizontal_additional_formulas.push_back(
-      //  m_horizontal_solver.create_variable(box->get_name() + ".width") %
-      //    m_min_fixed_box_width == 0);
-      //horizontal_additional_formulas.push_back(
-      //  m_horizontal_solver.create_variable(box->get_name() + ".width") <=
-      //    m_horizontal_solver.create_variable(LAYOUT_NAME));
       m_horizontal_constraints.add_local_constraint(Constraint(
         fmt::format("{}.width >= 0", box->get_name())), true);
       if(!m_horizontal_constraints.has_varaible_name_in_global(box->get_name())) {
@@ -459,17 +443,10 @@ bool Layout::build() {
       }
     }
     if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
-      //vertical_fixed_boxes.insert(box->get_name());
       m_vertical_constraints.add_local_constraint(Constraint(
         fmt::format("{}.height = {}", box->get_name(), box->get_rect().height())),
           true);
     } else {
-      //vertical_additional_formulas.push_back(
-      //  m_vertical_solver.create_variable(box->get_name() + ".height") %
-      //    m_min_fixed_box_height == -1);
-      //vertical_additional_formulas.push_back(
-      //  m_vertical_solver.create_variable(box->get_name() + ".height") <=
-      //    m_vertical_solver.create_variable(LAYOUT_NAME));
       m_vertical_constraints.add_local_constraint(Constraint(
        fmt::format("{}.height >= 0", box->get_name())), true);
       if(!m_vertical_constraints.has_varaible_name_in_global(box->get_name())) {
@@ -501,6 +478,13 @@ bool Layout::build() {
     m_horizontal_constraints.convert(m_horizontal_solver.get_context()));
   m_vertical_solver.add_const_formula(
     m_vertical_constraints.convert(m_vertical_solver.get_context()));
+}
+
+bool Layout::build() {
+  if(m_area != m_rect.width() * m_rect.height()) {
+    return false;
+  }
+  build_constraints();
   //m_thread = std::thread(&Layout::calculate_min_max_size, this,
   //  horizontal_solver, vertical_solver, boxes_rects,
   //  horizontal_fixed_boxes, vertical_fixed_boxes,
