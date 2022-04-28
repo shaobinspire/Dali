@@ -31,7 +31,7 @@ void Constraints::add_global_constraint(const Constraint& constraint) {
   }
 }
 
-expr_vector Constraints::convert(context& context) {
+expr_vector Constraints::convert(context& context) const {
   auto formulas = expr_vector(context);
   for(auto& constraint : m_constraints) {
     if(auto formula = constraint.convert_to_formula(context)) {

@@ -11,7 +11,7 @@ namespace Dali {
     public:
       void add_local_constraint(const Constraint& constraint, bool forced);
       void add_global_constraint(const Constraint& constraint);
-      z3::expr_vector convert(z3::context& context);
+      z3::expr_vector convert(z3::context& context) const;
       int get_constraint_count() const;
       const Constraint& get_constraint(int index) const;
       bool has_varaible_name_in_global(const std::string& name);

@@ -21,6 +21,7 @@ namespace Details {
       using SolveResult = std::unordered_map<std::string, double>;
 
       Solver();
+      Solver(const Solver& solver);
 
       void add_const_formula(const z3::expr_vector& formulas);
 
@@ -40,7 +41,7 @@ namespace Details {
       bool check(const z3::expr_vector& formulas);
 
       z3::expr create_variable(const std::string& name);
-      z3::expr_vector create_expr_vector();
+      //z3::expr_vector create_expr_vector();
 
       z3::context& get_context();
 
