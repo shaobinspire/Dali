@@ -88,7 +88,7 @@ double Solver::solve_maximum(const expr_vector& formulas, int lower_bound) {
   }
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-  m_solver.add(declare_variable(LAYOUT_NAME) > lower_bound);
+  m_solver.add(create_variable(LAYOUT_NAME) > lower_bound);
   m_solver.add(formulas);
   if(m_solver.check() == check_result::sat) {
     return MAX_LAYOUT_SIZE;
@@ -124,7 +124,7 @@ double Solver::solve_minimum(const expr_vector& formulas,
   //}
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-  m_solver.add(declare_variable(LAYOUT_NAME) <= upper_bound);
+  m_solver.add(create_variable(LAYOUT_NAME) <= upper_bound);
   m_solver.add(formulas);
   auto min = static_cast<double>(MAX_LAYOUT_SIZE);
   while(true) {
@@ -160,10 +160,21 @@ bool Solver::check(const expr_vector& formulas) {
   return m_solver.check() == check_result::sat;
 }
 
-expr Solver::declare_variable(const std::string& name) {
+expr Solver::create_variable(const std::string& name) {
   return m_context.int_const(name.c_str());
+}
+
+expr_vector Solver::create_expr_vector() {
+  return expr_vector(m_context);
 }
 
 context& Solver::get_context() {
   return m_context;
+}
+
+expr_vector& Dali::concatenate_to(const expr_vector& src, expr_vector& dst) {
+  for(auto iter = src.begin(); iter != src.end(); ++iter) {
+    dst.push_back(*iter);
+  }
+  return dst;
 }

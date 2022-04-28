@@ -39,7 +39,8 @@ namespace Details {
 
       bool check(const z3::expr_vector& formulas);
 
-      z3::expr declare_variable(const std::string& name);
+      z3::expr create_variable(const std::string& name);
+      z3::expr_vector create_expr_vector();
 
       z3::context& get_context();
 
@@ -47,6 +48,8 @@ namespace Details {
       z3::context m_context;
       z3::solver m_solver;
   };
+
+  z3::expr_vector& concatenate_to(const z3::expr_vector& src, z3::expr_vector& dst);
 }
 
 #endif
