@@ -352,7 +352,7 @@ void Layout::add_height_constraint(const Constraint& constraint) {
 }
 
 void Layout::add_position_constraint(const Constraint& constraint) {
-  m_position_constraints.add_local_constraint(constraint, true);
+  m_position_constraints.add_local_constraint(constraint, true, false);
 }
 
 int Layout::get_box_count() const {
@@ -426,7 +426,8 @@ void Layout::resize(const QSize& size) {
 void Layout::build_constraints() {
   m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
   m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
-  m_position_solver.add_const_formula(m_position_constraints.convert(m_position_solver.get_context()));
+  m_position_solver.add_const_formula(
+    m_position_constraints.convert(m_position_solver.get_context()));
   auto horizontal_expanding_box = std::vector<std::pair<int, int>>();
   auto vertical_expanding_box = std::vector<std::pair<int, int>>();
   for(auto i = 0; i < get_box_count(); ++i) {
@@ -434,10 +435,10 @@ void Layout::build_constraints() {
     if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
       m_horizontal_constraints.add_local_constraint(Constraint(
         fmt::format("{}.width = {}", box->get_name(), box->get_rect().width())),
-          true);
+          false, true);
     } else {
       m_horizontal_constraints.add_local_constraint(Constraint(
-        fmt::format("{}.width >= 0", box->get_name())), true);
+        fmt::format("{}.width >= 0", box->get_name())), true, false);
       if(!m_horizontal_constraints.has_varaible_name_in_global(box->get_name())) {
         horizontal_expanding_box.push_back({box->get_rect().width(), i});
       }
@@ -445,10 +446,10 @@ void Layout::build_constraints() {
     if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
       m_vertical_constraints.add_local_constraint(Constraint(
         fmt::format("{}.height = {}", box->get_name(), box->get_rect().height())),
-          true);
+          false, true);
     } else {
       m_vertical_constraints.add_local_constraint(Constraint(
-       fmt::format("{}.height >= 0", box->get_name())), true);
+       fmt::format("{}.height >= 0", box->get_name())), true, false);
       if(!m_vertical_constraints.has_varaible_name_in_global(box->get_name())) {
         vertical_expanding_box.push_back({box->get_rect().height(), i});
       }
@@ -461,7 +462,8 @@ void Layout::build_constraints() {
       m_horizontal_constraints.add_local_constraint(Constraint(
         fmt::format("{}.width = {}.width * {}", m_boxes[iter->second]->get_name(),
         m_boxes[horizontal_expanding_box.begin()->second]->get_name(),
-        static_cast<double>(iter->first) / horizontal_expanding_box.begin()->first)), false);
+        static_cast<double>(iter->first) / horizontal_expanding_box.begin()->first)),
+        false, false);
     }
   }
   if(!vertical_expanding_box.empty()) {
@@ -471,7 +473,8 @@ void Layout::build_constraints() {
       m_vertical_constraints.add_local_constraint(Constraint(
         fmt::format("{}.height = {}.height * {}", m_boxes[iter->second]->get_name(),
         m_boxes[vertical_expanding_box.begin()->second]->get_name(),
-        static_cast<double>(iter->first) / vertical_expanding_box.begin()->first)), false);
+        static_cast<double>(iter->first) / vertical_expanding_box.begin()->first)),
+        false, false);
     }
   }
   m_horizontal_solver.add_const_formula(

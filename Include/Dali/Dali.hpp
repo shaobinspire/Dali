@@ -18,9 +18,10 @@ namespace Dali {
   class Constraints;
   class Layout;
   class LayoutBox;
+  class LayoutValidator;
   class LayoutWidget;
-  class Parser;
   class Solver;
+  class Parser;
 }
 
 #endif

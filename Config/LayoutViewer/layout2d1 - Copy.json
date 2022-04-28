@@ -1,0 +1,43 @@
+{
+    "layout": [
+        {
+            "name": "A",
+            "left": 0,
+            "top": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "B",
+            "left": 200,
+            "top": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "C",
+            "left": 0,
+            "top": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "D",
+            "left": 200,
+            "top": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        }
+    ],
+    "constraints": [
+        "D.width = 400"
+    ]
+}

@@ -208,15 +208,20 @@ expr Constraint::convert_to_formula(context& context) const {
     return expr(context);
   }
   if(m_comparison_operator == ComparisonOperator::EQUAL_TO) {
-    return get_formula(context, m_lhs_elements) == get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) ==
+      get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::LESS_THAN) {
-    return get_formula(context, m_lhs_elements) < get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) <
+      get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::LESS_THAN_OR_EQUAL_TO) {
-    return get_formula(context, m_lhs_elements) <= get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) <=
+      get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::GREATER_THAN) {
-    return get_formula(context, m_lhs_elements) > get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) >
+      get_formula(context, m_rhs_elements);
   } else if(m_comparison_operator == ComparisonOperator::GREATER_THAN_OR_EQUAL_TO) {
-    return get_formula(context, m_lhs_elements) >= get_formula(context, m_rhs_elements);
+    return get_formula(context, m_lhs_elements) >=
+      get_formula(context, m_rhs_elements);
   }
   return expr(context);
 }
@@ -274,7 +279,12 @@ std::vector<Constraint::Element> Constraint::convert_to_rpn(const std::string& e
       if(std::holds_alternative<Variable>(elements.back())) {
         auto& variable = std::get<Variable>(elements.back());
         m_variable_names.insert(variable.m_name);
-        m_type_related = parse_type(variable.m_property);
+        auto type_related = parse_type(variable.m_property);
+        if(m_type_related == Type::NONE) {
+          m_type_related = type_related;
+        } else if(m_type_related != type_related) {
+          m_type_related = Type::INVALID;
+        }
         m_variables.push_back(variable);
       }
     } else if(token.m_token == "(") {

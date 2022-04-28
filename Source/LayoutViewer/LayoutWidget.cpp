@@ -78,12 +78,6 @@ QSize LayoutWidget::get_max_size() const {
   return m_layout->get_max_size();
 }
 
-//void LayoutWidget::update_size(const QSize& size) {
-//  if(m_layout) {
-//    m_layout->resize(size);
-//  }
-//}
-
 bool LayoutWidget::has_valid_layout() const {
   return m_layout != nullptr;
 }

@@ -4,15 +4,16 @@
 using namespace Dali;
 using namespace z3;
 
-void Constraints::add_local_constraint(const Constraint& constraint, bool forced) {
-  if(forced) {
+void Constraints::add_local_constraint(const Constraint& constraint, bool is_forced, bool is_fixed) {
+  if(is_forced) {
     m_constraints.push_back(constraint);
     return;
   }
   auto& variable_names = constraint.get_variable_names();
   auto is_contained = [&] {
     for(auto& name : variable_names) {
-      if(m_global_variable_name.contains(name)) {
+      if(!is_fixed && m_global_variable_name.contains(name) ||
+          is_fixed && m_assignment_variables.contains(name)) {
         return true;
       }
     }
@@ -26,6 +27,9 @@ void Constraints::add_local_constraint(const Constraint& constraint, bool forced
 void Constraints::add_global_constraint(const Constraint& constraint) {
   m_constraints.push_back(constraint);
   auto& variable_names = constraint.get_variable_names();
+  if(variable_names.size() == 1) {
+    m_assignment_variables.insert(*variable_names.begin());
+  }
   for(auto& name : variable_names) {
     m_global_variable_name.insert(name);
   }
@@ -58,4 +62,6 @@ bool Constraints::has_varaible_name_in_global(const std::string& name) {
 
 void Constraints::clear() {
   m_constraints.clear();
+  m_global_variable_name.clear();
+  m_assignment_variables.clear();
 }

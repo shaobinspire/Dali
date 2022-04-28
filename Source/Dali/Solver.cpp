@@ -19,18 +19,14 @@ Solver::Solver()
 }
 
 Solver::Solver(const Solver& solver)
-  : m_solver(m_context, Z3_solver_translate(solver.m_context, solver.m_solver, m_context)) {}
+  : m_solver(m_context,
+      Z3_solver_translate(solver.m_context, solver.m_solver, m_context)) {}
 
 void Solver::add_const_formula(const expr_vector& formulas) {
   for(unsigned i = 0; i < formulas.size(); ++i) {
     qDebug() << formulas[i].to_string().c_str();
   }
   m_solver.add(formulas);
-  //for(auto i = -1; i < constraints.get_constraint_count(); ++i) {
-  //  if(auto formula = constraints.get_constraint(i).convert_to_formula(m_context)) {
-  //    m_solver.add(formula);
-  //  }
-  //}
 }
 
 Solver::SolveResult Solver::solve(const expr_vector& formulas, int value) {

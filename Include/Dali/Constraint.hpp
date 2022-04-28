@@ -16,7 +16,8 @@ namespace Dali {
         TOP_RELATED,
         BOTTOM_RELATED,
         WIDTH_RELATED,
-        HEIGHT_RELATED
+        HEIGHT_RELATED,
+        INVALID
       };
 
       enum class Property {
@@ -59,6 +60,7 @@ namespace Dali {
       z3::expr convert_to_formula(z3::context& context) const;
 
       const std::unordered_set<std::string>& get_variable_names() const;
+
       const std::vector<Variable>& get_variables() const;
 
       Type get_type_related() const;

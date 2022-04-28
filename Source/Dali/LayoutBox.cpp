@@ -3,9 +3,9 @@
 using namespace Dali;
 
 LayoutBox::LayoutBox()
-  : m_is_name_visible(true),
-    m_horizontal_size_policy(SizePolicy::Expanding),
-    m_vertical_size_policy(SizePolicy::Expanding) {}
+  : m_horizontal_size_policy(SizePolicy::Expanding),
+    m_vertical_size_policy(SizePolicy::Expanding),
+    m_is_name_visible(true) {}
 
 QRect LayoutBox::get_rect() const {
   return m_rect;

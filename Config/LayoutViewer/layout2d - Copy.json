@@ -1,0 +1,88 @@
+{
+    "layout": [
+        {
+            "name": "A",
+            "left": 0,
+            "top": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "B",
+            "left": 200,
+            "top": 0,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "C",
+            "left": 400,
+            "top": 0,
+            "width": 200,
+            "height": 100,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "D",
+            "left": 0,
+            "top": 200,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "E",
+            "left": 200,
+            "top": 200,
+            "width": 200,
+            "height": 100,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "F",
+            "left": 400,
+            "top": 100,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "G",
+            "left": 0,
+            "top": 400,
+            "width": 200,
+            "height": 100,
+            "horizontal": "take_space",
+            "vertical": "take_space"
+        },
+        {
+            "name": "H",
+            "left": 200,
+            "top": 300,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        },
+        {
+            "name": "I",
+            "left": 400,
+            "top": 300,
+            "width": 200,
+            "height": 200,
+            "horizontal": "fixed",
+            "vertical": "fixed"
+        }
+    ],
+    "constraints": [
+        "B.width = A.width * 2"
+    ]
+}
