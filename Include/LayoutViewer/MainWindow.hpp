@@ -17,6 +17,7 @@ namespace Dali {
       void closeEvent(QCloseEvent *event) override;
 
     private:
+      //Parser m_parser;
       LayoutWidget* m_layout_widget;
       JsonEditor* m_editor;
       QTextEdit* m_error_output;
@@ -29,7 +30,6 @@ namespace Dali {
       QAction* m_refresh_action;
       QAction* m_show_original_action;
       QString m_file_name;
-      Parser m_parser;
 
       void create_dock_windows();
       void create_menu();
@@ -41,8 +41,8 @@ namespace Dali {
       void show_original();
       bool save_file(const QString& file_name);
       bool maybe_save();
-      void parse_result(bool is_failed);
       void update_layout_size_message();
+      void on_text_changed();
   };
 }
 

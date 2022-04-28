@@ -2,6 +2,7 @@ find_package(Qt5Widgets REQUIRED)
 file(GLOB_RECURSE header_files ${DALI_INCLUDE_PATH}/Dali/*.hpp)
 file(GLOB_RECURSE source_files ${DALI_SOURCE_PATH}/Dali/*.cpp)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 if(WIN32)
   set(app_type WIN32)
 endif(WIN32)

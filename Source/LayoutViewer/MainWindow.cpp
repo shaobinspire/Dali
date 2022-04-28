@@ -13,6 +13,7 @@
 #include <QTextStream>
 #include <QToolBar>
 #include "Dali/Layout.hpp"
+#include "Dali/Parser.hpp"
 #include "LayoutViewer/LayoutWidget.hpp"
 
 using namespace Dali;
@@ -83,7 +84,7 @@ void MainWindow::create_dock_windows() {
   json_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
   m_editor = new JsonEditor();
   m_editor->setMinimumWidth(300);
-  m_editor->connect_parse_result(std::bind_front(&MainWindow::parse_result, this));
+  connect(m_editor, &JsonEditor::textChanged, this, &MainWindow::on_text_changed);
   json_dock->setWidget(m_editor);
   addDockWidget(Qt::RightDockWidgetArea, json_dock);
   m_view_menu->addAction(json_dock->toggleViewAction());
@@ -162,13 +163,13 @@ void MainWindow::open() {
   m_file_name = file_name;
   setWindowFilePath(m_file_name);
   statusBar()->showMessage(QString(tr("Opened \"%1\"")).arg(m_file_name.split("/").back()));
-  m_editor->load_json(m_file_name);
+  m_editor->load(m_file_name);
   m_refresh_action->setEnabled(true);
   m_show_original_action->setEnabled(true);
 }
 
 void MainWindow::refresh() {
-  m_editor->load_json(m_file_name);
+  m_editor->load(m_file_name);
 }
 
 bool MainWindow::save() {
@@ -194,9 +195,8 @@ void MainWindow::show_original() {
     return;
   }
   m_error_output->setText("");
-  auto layout = m_parser.parse(m_editor->get_json());
-  m_layout_widget->set_layout(layout);
   m_layout_widget->show_original_layout(true);
+  m_editor->load(m_file_name);
   adjustSize();
   m_layout_widget->update();
   m_layout_widget->show_original_layout(false);
@@ -228,6 +228,37 @@ bool MainWindow::save_file(const QString& file_name) {
   return true;
 }
 
+void MainWindow::on_text_changed() {
+  auto parser = Parser();
+  auto result = parser.verify(m_editor->toPlainText().toStdString());
+  if(!result.first) {
+    m_error_output->setText(QString::fromStdString(result.second));
+    m_layout_widget->set_layout(nullptr);
+    m_layout_size_label->setText("");
+    m_size_label->setText("");
+  } else {
+    m_error_output->setText("");
+    auto layout = parser.parse();
+    if(!layout.second.empty()) {
+      m_error_output->setText(QString::fromStdString(layout.second));
+      return;
+    }
+    if(!m_layout_widget->set_layout(layout.first)) {
+      m_error_output->setText("The layout is invalid.");
+      m_layout_widget->update();
+      return;
+    }
+    m_layout_widget->adjust_size();
+    update_layout_size_message();
+    auto min_size = m_layout_widget->get_min_size();
+    auto max_size = m_layout_widget->get_max_size();
+    m_size_label->setText(QString("Min: %1x%2  Max: %3x%4").arg(min_size.width()).
+      arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
+  }
+  m_layout_widget->update();
+
+}
+
 bool MainWindow::maybe_save() {
   if(!m_editor->document()->isModified()) {
     return true;
@@ -241,29 +272,6 @@ bool MainWindow::maybe_save() {
     return false;
   }
   return true;
-}
-
-void MainWindow::parse_result(bool is_failed) {
-  if(is_failed) {
-    m_error_output->setText(QString::fromStdString(m_editor->get_errors()));
-    m_layout_widget->set_layout(nullptr);
-    m_layout_size_label->setText("");
-    m_size_label->setText("");
-  } else {
-    m_error_output->setText("");
-    auto layout = m_parser.parse(m_editor->get_json());
-    if(!m_layout_widget->set_layout(layout)) {
-      m_error_output->setText("The layout is invalid.");
-      return;
-    }
-    m_layout_widget->adjust_size();
-    update_layout_size_message();
-    auto min_size = m_layout_widget->get_min_size();
-    auto max_size = m_layout_widget->get_max_size();
-    m_size_label->setText(QString("Min: %1x%2  Max: %3x%4").arg(min_size.width()).
-      arg(min_size.height()).arg(max_size.width()).arg(max_size.height()));
-  }
-  m_layout_widget->update();
 }
 
 void MainWindow::update_layout_size_message() {

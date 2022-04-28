@@ -25,8 +25,10 @@ include_directories(SYSTEM ${QT_WIDGETS_INCLUDE_PATH})
 include_directories(SYSTEM ${JSON_INCLUDE_PATH})
 include_directories(SYSTEM ${Z3_INCLUDE_PATH})
 include_directories(${PROJECT_BINARY_DIR})
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/valijson)
 
 set(Qt5Widgets_DIR "${QT_ROOT}/qtbase/lib/cmake/Qt5Widgets")
+
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX /bigobj /std:c++20")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")

@@ -1,11 +1,7 @@
 find_package(Qt5Widgets REQUIRED)
 file(GLOB_RECURSE header_files ${DALI_INCLUDE_PATH}/LayoutViewer/*.hpp)
 file(GLOB_RECURSE source_files ${DALI_SOURCE_PATH}/LayoutViewer/*.cpp)
-# source_group("Header Files" FILES ${header_files})
-# source_group("Source Files" FILES ${source_files})
-include_directories(SYSTEM ${JSON_SCHEMA_VALIDATOR_INCLUDE_PATH})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/valijson)
 
 if(WIN32)
   set(app_type WIN32)
