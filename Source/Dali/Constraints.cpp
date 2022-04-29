@@ -27,7 +27,8 @@ void Constraints::add_local_constraint(const Constraint& constraint, bool is_for
 void Constraints::add_global_constraint(const Constraint& constraint) {
   m_constraints.push_back(constraint);
   auto& variable_names = constraint.get_variable_names();
-  if(variable_names.size() == 1) {
+  if(variable_names.size() == 1 && constraint.get_comparsion_operator() ==
+      Constraint::ComparisonOperator::EQUAL_TO) {
     m_assignment_variables.insert(*variable_names.begin());
   }
   for(auto& name : variable_names) {

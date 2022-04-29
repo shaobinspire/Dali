@@ -23,9 +23,9 @@ Solver::Solver(const Solver& solver)
       Z3_solver_translate(solver.m_context, solver.m_solver, m_context)) {}
 
 void Solver::add_const_formula(const expr_vector& formulas) {
-  for(unsigned i = 0; i < formulas.size(); ++i) {
-    qDebug() << formulas[i].to_string().c_str();
-  }
+  //for(unsigned i = 0; i < formulas.size(); ++i) {
+  //  qDebug() << formulas[i].to_string().c_str();
+  //}
   m_solver.add(formulas);
 }
 
@@ -118,9 +118,9 @@ double Solver::solve_minimum(const expr_vector& formulas) {
 double Solver::solve_minimum(const expr_vector& formulas,
     const std::unordered_set<std::string>& unchanged_variables,
     int lower_bound, int upper_bound) {
-  for(unsigned i = 0; i < formulas.size(); ++i) {
-    qDebug() << formulas[i].to_string().c_str();
-  }
+  //for(unsigned i = 0; i < formulas.size(); ++i) {
+  //  qDebug() << formulas[i].to_string().c_str();
+  //}
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
   m_solver.add(create_variable(LAYOUT_NAME) <= upper_bound);
@@ -134,12 +134,12 @@ double Solver::solve_minimum(const expr_vector& formulas,
     ++count;
     auto model = m_solver.get_model();
     auto changed_expr = expr_vector(m_context);
-    auto debug = qDebug();
-    debug << "count: " << count << ": ";
+    //auto debug = qDebug();
+    //debug << "count: " << count << ": ";
     for(auto i = static_cast<unsigned>(0); i < model.num_consts(); ++i) {
       auto decl = model.get_const_decl(i);
       auto name = decl.name().str();
-      debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
+      //debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
       if(!unchanged_variables.contains(name)) {
         changed_expr.push_back(decl() != model.eval(decl()));
       }

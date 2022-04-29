@@ -383,12 +383,10 @@ void Layout::resize(const QSize& size) {
   }
   auto rows = build_rows(boxes_rects);
   auto horizontal_formulas = build_horizontal_formulas(m_horizontal_solver, m_boxes_names, rows);
-  qDebug() << "horizontal:";
   auto widths = m_horizontal_solver.solve(horizontal_formulas, size.width());
   adjust_horizontal_layout(m_name_map, widths, rows, boxes_rects);
   auto columns = build_columns(boxes_rects);
   auto vertical_formulas = build_vertical_formulas(m_vertical_solver, m_boxes_names, columns);
-  qDebug() << "vertical:";
   auto heights = m_vertical_solver.solve(vertical_formulas, size.height());
   adjust_vertical_layout(m_name_map, heights, columns, boxes_rects);
   auto formulas = expr_vector(m_position_solver.get_context());
@@ -408,7 +406,7 @@ void Layout::resize(const QSize& size) {
     area += boxes_rects[i].width() * boxes_rects[i].height();
     rect = rect.united(boxes_rects[i]);
   }
-  auto area2 = (boxes_rects.back().bottom() + 1) * (boxes_rects.back().right() + 1);
+  auto area2 = rect.width() * rect.height();
   if(area > area2) {
     m_status = Status::LAYOUT_OVERFLOW;
     return;
@@ -488,32 +486,6 @@ bool Layout::build() {
     return false;
   }
   build_constraints();
-  //m_thread = std::thread(&Layout::calculate_min_max_size, this,
-  //  horizontal_solver, vertical_solver, boxes_rects,
-  //  horizontal_fixed_boxes, vertical_fixed_boxes,
-  //  horizontal_additional_formulas, vertical_additional_formulas);
-  //m_thread = std::thread([&] {
-  //  auto horizontal_solver = Solver();
-  //  auto vertical_solver = Solver();
-  //  horizontal_solver.add_const_formula(
-  //    m_horizontal_constraints.convert(horizontal_solver.get_context()));
-  //  vertical_solver.add_const_formula(
-  //    m_vertical_constraints.convert(vertical_solver.get_context()));
-  //  calculate_min_max_size(
-  //    horizontal_solver, vertical_solver, boxes_rects,
-  //    horizontal_fixed_boxes, vertical_fixed_boxes,
-  //    horizontal_additional_formulas, vertical_additional_formulas);
-  //  });
-  //m_thread = std::thread(&Layout::calculate_min_max_size, this);
-  //m_thread = std::thread([=] {
-    //calculate_min_max_size(m_boxes, m_name_map, m_horizontal_constraints,
-    //  m_vertical_constraints, m_rect, m_min_fixed_box_width, m_min_fixed_box_height,
-    //  m_total_fixed_box_width, m_total_fixed_box_height);
-    //});
-    //calculate_min_max_size(m_boxes, m_name_map, m_horizontal_solver,
-    //  m_vertical_solver, m_rect, m_min_fixed_box_width, m_min_fixed_box_height,
-    //  m_total_fixed_box_width, m_total_fixed_box_height);
-    //});
   calculate_min_max_size();
   return true;
 }

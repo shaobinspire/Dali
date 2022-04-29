@@ -83,6 +83,6 @@
         }
     ],
     "constraints": [
-        "B.width = A.width * 2"
+       
     ]
 }
