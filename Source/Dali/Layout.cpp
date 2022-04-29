@@ -18,13 +18,9 @@ void adjust_horizontal_layout(
     boxes_rects[name_map.at(name)].setWidth(static_cast<int>(box.second));
   }
   if(!boxes_widths.empty()) {
-    //qDebug() << "adjust row:";
     for(auto& row : rows) {
-      //auto debug = qDebug();
-      //debug << row[0] << " " << boxes_rects[row[0]] << ";";
       for(auto i = 1; i < static_cast<int>(row.size()); ++i) {
         boxes_rects[row[i]].moveLeft(boxes_rects[row[i - 1]].right() + 1);
-        //debug << row[i] << " " << boxes_rects[row[i]] << ";";
       }
     }
   }
@@ -43,21 +39,18 @@ void adjust_vertical_layout(
     boxes_rects[name_map.at(name)].setHeight(static_cast<int>(box.second));
   }
   if(!boxes_heights.empty()) {
-    //qDebug() << "adjust column:";
     for(auto& column : columns) {
-      //auto debug = qDebug();
-      //debug << column[0] << " " << boxes_rects[column[0]] << ";";
       for(auto i = 1; i < static_cast<int>(column.size()); ++i) {
         boxes_rects[column[i]].moveTop(boxes_rects[column[i - 1]].bottom() + 1);
-        //debug << column[i] << " " << boxes_rects[column[i]] << ";";
       }
     }
   }
 }
 
-void permute_horizontal(
-  const std::vector<QRect>& boxes_rects, const std::vector<std::vector<int>>::iterator& iter, int size,
-  const std::vector<std::vector<int>>::iterator& end, int width, std::vector<int>& tmp, std::vector<std::vector<int>>& result) {
+void permute_horizontal(const std::vector<QRect>& boxes_rects,
+    const std::vector<std::vector<int>>::iterator& iter,
+    const std::vector<std::vector<int>>::iterator& end, int size, int width,
+    std::vector<int>& tmp, std::vector<std::vector<int>>& result) {
   if(tmp.size() == size || iter == end) {
     auto w = 0;
     for(auto i : tmp) {
@@ -76,15 +69,17 @@ void permute_horizontal(
     } else {
       tmp.push_back((*iter)[i]);
     }
-    permute_horizontal(boxes_rects, std::next(iter), size, end, width, tmp, result);
+    permute_horizontal(boxes_rects, std::next(iter), end, size, width, tmp, result);
     if(!tmp.empty()) {
       tmp.pop_back();
     }
   }
 }
 
-void permute_vertical(const std::vector<QRect>& boxes_rects, const std::vector<std::vector<int>>::iterator& iter, int size,
-  const std::vector<std::vector<int>>::iterator& end, int height, std::vector<int>& tmp, std::vector<std::vector<int>>& result) {
+void permute_vertical(const std::vector<QRect>& boxes_rects,
+    const std::vector<std::vector<int>>::iterator& iter,
+    const std::vector<std::vector<int>>::iterator& end, int size, int height,
+    std::vector<int>& tmp, std::vector<std::vector<int>>& result) {
   if(tmp.size() == size || iter == end) {
     auto h = 0;
     for(auto i : tmp) {
@@ -103,7 +98,7 @@ void permute_vertical(const std::vector<QRect>& boxes_rects, const std::vector<s
     } else {
       tmp.push_back((*iter)[i]);
     }
-    permute_vertical(boxes_rects, std::next(iter), size, end, height, tmp, result);
+    permute_vertical(boxes_rects, std::next(iter), end, size, height, tmp, result);
     if(!tmp.empty()) {
       tmp.pop_back();
     }
@@ -128,17 +123,19 @@ std::vector<std::vector<int>> build_rows(
   for(auto i = 0; i < size; ++i) {
     const auto& rect = boxes_rects[i];
     auto index = 0;
-    for(auto iter = top_map_row.begin(); iter != top_map_row.end(); ++iter, ++index) {
+    for(auto iter = top_map_row.begin(); iter != top_map_row.end(); ++iter,
+        ++index) {
       auto y = iter->first;
-      if((rect.height() == 0 && (y == rect.y() || y == rect.bottom())) || (y >= rect.y() && y <= rect.bottom())) {
+      if((rect.height() == 0 && (y == rect.y() || y == rect.bottom())) ||
+          (y >= rect.y() && y <= rect.bottom())) {
         map_rows[index][rect.x()].push_back(i);
       } else if(y > rect.bottom()) {
         break;
-  set_param("parallel.enable", true);
       }
     }
     auto& last_row = *bottom_map_row.rbegin();
-    for(auto iter = last_row.second.begin(); iter != last_row.second.end(); ++iter) {
+    for(auto iter = last_row.second.begin(); iter != last_row.second.end();
+        ++iter) {
       if(i == *iter) {
         map_rows.back()[rect.x()].push_back(i);
       }
@@ -170,7 +167,8 @@ std::vector<std::vector<int>> build_rows(
   auto rows = std::vector<std::vector<int>>();
   auto row = std::vector<int>();
   for(auto& r : tmp_rows) {
-    permute_horizontal(boxes_rects, r.begin(), r.size(), r.end(), total_rect.width(), row, rows);
+    permute_horizontal(boxes_rects, r.begin(), r.end(), r.size(),
+      total_rect.width(), row, rows);
   }
   return rows;
 }
@@ -189,20 +187,24 @@ std::vector<std::vector<int>> build_columns(
     left_map_column[rect.left()].push_back(i);
     right_map_column[rect.right()].push_back(i);
   }
-  auto map_columns = std::vector<std::map<int, std::vector<int>>>(left_map_column.size());
+  auto map_columns =
+    std::vector<std::map<int, std::vector<int>>>(left_map_column.size());
   for(auto i = 0; i < size; ++i) {
     const auto& rect = boxes_rects[i];
     auto index = 0;
-    for(auto iter = left_map_column.begin(); iter != left_map_column.end(); ++iter, ++index) {
+    for(auto iter = left_map_column.begin(); iter != left_map_column.end();
+        ++iter, ++index) {
       auto x = iter->first;
-      if((rect.width() == 0 && (x == rect.x() || x == rect.right())) || (x >= rect.x() && x <= rect.right())) {
+      if((rect.width() == 0 && (x == rect.x() || x == rect.right())) ||
+          (x >= rect.x() && x <= rect.right())) {
         map_columns[index][rect.y()].push_back(i);
       } else if(x > rect.right()) {
         break;
       }
     }
     auto& last_column = *right_map_column.rbegin();
-    for(auto iter = last_column.second.begin(); iter != last_column.second.end(); ++iter) {
+    for(auto iter = last_column.second.begin(); iter != last_column.second.end();
+        ++iter) {
       if(i == *iter) {
         map_columns.back()[rect.y()].push_back(i);
       }
@@ -234,12 +236,15 @@ std::vector<std::vector<int>> build_columns(
   auto columns = std::vector<std::vector<int>>();
   auto column = std::vector<int>();
   for(auto& c : tmp_columns) {
-    permute_vertical(boxes_rects, c.begin(), c.size(), c.end(), total_rect.height(), column, columns);
+    permute_vertical(boxes_rects, c.begin(), c.end(), c.size(),
+      total_rect.height(), column, columns);
   }
   return columns;
 }
 
-expr_vector build_horizontal_formulas(Solver& solver, const std::vector<std::string>& names, const std::vector<std::vector<int>>& rows) {
+expr_vector build_horizontal_formulas(Solver& solver,
+    const std::vector<std::string>& names,
+    const std::vector<std::vector<int>>& rows) {
   auto formulas = expr_vector(solver.get_context());
   for(auto& row : rows) {
     if(row.empty()) {
@@ -254,7 +259,9 @@ expr_vector build_horizontal_formulas(Solver& solver, const std::vector<std::str
   return formulas;
 }
 
-expr_vector build_vertical_formulas(Solver& solver, const std::vector<std::string>& names, const std::vector<std::vector<int>>& columns) {
+expr_vector build_vertical_formulas(Solver& solver,
+    const std::vector<std::string>& names,
+    const std::vector<std::vector<int>>& columns) {
   auto formulas = expr_vector(solver.get_context());
   for(auto& column : columns) {
     if(column.empty()) {
@@ -429,6 +436,21 @@ void Layout::resize(const QSize& size) {
   m_rect.setSize(rect.size());
 }
 
+bool Layout::build() {
+  if(m_area != m_rect.width() * m_rect.height()) {
+    return false;
+  }
+  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
+  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
+  build_constraints();
+  calculate_min_max_size();
+  return true;
+}
+
+Layout::Status Layout::get_status() const {
+  return m_status;
+}
+
 void Layout::build_constraints() {
   m_position_solver.add_const_formula(
     m_position_constraints.convert(m_position_solver.get_context()));
@@ -485,21 +507,6 @@ void Layout::build_constraints() {
     m_horizontal_constraints.convert(m_horizontal_solver.get_context()));
   m_vertical_solver.add_const_formula(
     m_vertical_constraints.convert(m_vertical_solver.get_context()));
-}
-
-bool Layout::build() {
-  if(m_area != m_rect.width() * m_rect.height()) {
-    return false;
-  }
-  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
-  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
-  build_constraints();
-  calculate_min_max_size();
-  return true;
-}
-
-Layout::Status Layout::get_status() const {
-  return m_status;
 }
 
 void Layout::calculate_min_max_size() {

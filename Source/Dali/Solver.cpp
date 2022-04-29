@@ -23,16 +23,10 @@ Solver::Solver(const Solver& solver)
       Z3_solver_translate(solver.m_context, solver.m_solver, m_context)) {}
 
 void Solver::add_const_formula(const expr_vector& formulas) {
-  //for(unsigned i = 0; i < formulas.size(); ++i) {
-  //  qDebug() << formulas[i].to_string().c_str();
-  //}
   m_solver.add(formulas);
 }
 
 Solver::SolveResult Solver::solve(const expr_vector& formulas, int value) {
-  //for(unsigned i = 0; i < formulas.size(); ++i) {
-  //  qDebug() << formulas[i].to_string().c_str();
-  //}
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
   m_solver.add(formulas);
@@ -51,9 +45,6 @@ Solver::SolveResult Solver::solve(const expr_vector& formulas, int value) {
 
 std::vector<Solver::SolveResult> Solver::solve(const expr_vector& formulas,
     const std::unordered_set<std::string>& unchanged_variables, int value) {
-  //for(unsigned i = 0; i < formulas.size(); ++i) {
-  //  qDebug() << formulas[i].to_string().c_str();
-  //}
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
   m_solver.add(formulas);
@@ -98,9 +89,6 @@ double Solver::solve_maximum(const expr_vector& formulas, int lower_bound) {
 double Solver::solve_minimum(const expr_vector& formulas) {
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
-  //for(unsigned i = 0; i < formulas.size(); ++i) {
-  //  qDebug() << formulas[i].to_string().c_str();
-  //}
   m_solver.add(formulas);
   if(m_solver.check() != check_result::sat) {
     return 0;
@@ -118,9 +106,6 @@ double Solver::solve_minimum(const expr_vector& formulas) {
 double Solver::solve_minimum(const expr_vector& formulas,
     const std::unordered_set<std::string>& unchanged_variables,
     int lower_bound, int upper_bound) {
-  //for(unsigned i = 0; i < formulas.size(); ++i) {
-  //  qDebug() << formulas[i].to_string().c_str();
-  //}
   m_solver.push();
   auto on_exit = Details::ScopeExit([&] { m_solver.pop(); });
   m_solver.add(create_variable(LAYOUT_NAME) <= upper_bound);
@@ -134,12 +119,9 @@ double Solver::solve_minimum(const expr_vector& formulas,
     ++count;
     auto model = m_solver.get_model();
     auto changed_expr = expr_vector(m_context);
-    //auto debug = qDebug();
-    //debug << "count: " << count << ": ";
     for(auto i = static_cast<unsigned>(0); i < model.num_consts(); ++i) {
       auto decl = model.get_const_decl(i);
       auto name = decl.name().str();
-      //debug << decl.name().str().c_str() << ":" << model.get_const_interp(decl).as_double() << " ";
       if(!unchanged_variables.contains(name)) {
         changed_expr.push_back(decl() != model.eval(decl()));
       }
@@ -165,10 +147,6 @@ bool Solver::check(const expr_vector& formulas) {
 expr Solver::create_variable(const std::string& name) {
   return m_context.int_const(name.c_str());
 }
-
-//expr_vector Solver::create_expr_vector() {
-//  return expr_vector(m_context);
-//}
 
 context& Solver::get_context() {
   return m_context;

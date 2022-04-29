@@ -91,10 +91,6 @@ bool LayoutWidget::set_layout(std::shared_ptr<Layout> layout) {
   if(!m_layout) {
     return false;
   }
-  //if(m_is_show_original) {
-  //  m_layout->build_constraints();
-  //  return true;
-  //}
   if(!m_layout->build()) {
     m_layout.reset();
     return false;

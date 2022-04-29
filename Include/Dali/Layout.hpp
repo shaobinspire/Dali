@@ -31,18 +31,13 @@ namespace Dali {
       void add_position_constraint(const Constraint& constraint);
 
       int get_box_count() const;
-
       LayoutBox* get_box(int index) const;
-
       QRect get_temporary_box_rect(int index) const;
 
       QSize get_min_size();
-
       QSize get_max_size();
 
       void resize(const QSize& size);
-
-      void build_constraints();
 
       bool build();
 
@@ -69,6 +64,7 @@ namespace Dali {
       int m_total_fixed_box_height;
       int m_area;
 
+      void build_constraints();
       void calculate_min_max_size();
   };
 }

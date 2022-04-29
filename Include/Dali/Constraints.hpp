@@ -9,7 +9,8 @@ namespace Dali {
 
   class Constraints {
     public:
-      void add_local_constraint(const Constraint& constraint, bool is_forced, bool is_fixed);
+      void add_local_constraint(const Constraint& constraint, bool is_forced,
+        bool is_fixed);
 
       void add_global_constraint(const Constraint& constraint);
 
@@ -19,13 +20,12 @@ namespace Dali {
 
       const Constraint& get_constraint(int index) const;
 
-      bool has_varaible_name_in_global(const std::string& name);
+      bool has_varaible_name_in_global(const std::string& name) const;
 
       void clear();
 
     private:
       std::vector<Constraint> m_constraints;
-
       std::unordered_set<std::string> m_global_variable_name;
       std::unordered_set<std::string> m_assignment_variables;
   };

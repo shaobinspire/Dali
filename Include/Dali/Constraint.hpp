@@ -77,10 +77,9 @@ namespace Dali {
       ComparisonOperator m_comparison_operator;
 
       void parse();
-      std::vector<Constraint::Element> convert_to_rpn(const std::string& expression);
+      std::vector<Constraint::Element> convert_to_rpn(
+        const std::string& expression);
   };
-
-  std::string to_string(Constraint::Property property);
 }
 
 #endif

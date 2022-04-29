@@ -4,7 +4,8 @@
 using namespace Dali;
 using namespace z3;
 
-void Constraints::add_local_constraint(const Constraint& constraint, bool is_forced, bool is_fixed) {
+void Constraints::add_local_constraint(const Constraint& constraint,
+    bool is_forced, bool is_fixed) {
   if(is_forced) {
     m_constraints.push_back(constraint);
     return;
@@ -57,7 +58,7 @@ const Constraint& Constraints::get_constraint(int index) const {
   return m_constraints[index];
 }
 
-bool Constraints::has_varaible_name_in_global(const std::string& name) {
+bool Constraints::has_varaible_name_in_global(const std::string& name) const {
   return m_global_variable_name.contains(name);
 }
 
