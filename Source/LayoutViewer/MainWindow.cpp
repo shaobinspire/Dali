@@ -22,11 +22,9 @@ using namespace nlohmann;
 MainWindow::MainWindow() {
   auto central_widget = new QWidget(this);
   central_widget->setStyleSheet("background-color: #F1F1F1;");
-  //central_widget->setStyleSheet("background-color: red;");
   central_widget->installEventFilter(this);
   auto layout = new QHBoxLayout(central_widget);
   m_layout_widget = new LayoutWidget();
-  //m_layout_widget->setStyleSheet("background-color: green;");
   layout->addWidget(m_layout_widget);
   setCentralWidget(central_widget);
   create_menu();
@@ -126,12 +124,18 @@ void MainWindow::create_menu() {
   auto zoom_tool_bar = addToolBar(tr("Zoom"));
   auto reset_zoom_icon = QIcon(":/images/resetzoom.png");
   m_show_original_action =
-    zoom_menu->addAction(reset_zoom_icon, tr("&Show Original"), this, &MainWindow::show_original);
+    zoom_menu->addAction(reset_zoom_icon, tr("&Show Original"), this,
+      &MainWindow::show_original);
   zoom_tool_bar->addAction(m_show_original_action);
   m_show_original_action->setEnabled(false);
 }
 
 void MainWindow::create_size_setting_tool_bar() {
+  auto adjust_size = [=] {
+    m_layout_widget->updateGeometry();
+    centralWidget()->adjustSize();
+    adjustSize();
+  };
   auto size_setting_tool_bar = addToolBar(tr("Size"));
   size_setting_tool_bar->setAllowedAreas(Qt::TopToolBarArea);
   size_setting_tool_bar->addWidget(new QLabel(tr("Width:")));
@@ -140,6 +144,7 @@ void MainWindow::create_size_setting_tool_bar() {
   connect(m_width_spin_box, QOverload<int>::of(&QSpinBox::valueChanged),
     [=] (auto value) {
       m_layout_widget->resize(QSize(value, m_layout_widget->size().height()));
+      adjust_size();
     });
   size_setting_tool_bar->addWidget(m_width_spin_box);
   size_setting_tool_bar->addWidget(new QLabel(("  ")));
@@ -149,6 +154,7 @@ void MainWindow::create_size_setting_tool_bar() {
   connect(m_height_spin_box, QOverload<int>::of(&QSpinBox::valueChanged),
     [=] (auto value) {
       m_layout_widget->resize(QSize(m_layout_widget->size().width(), value));
+      adjust_size();
     });
   size_setting_tool_bar->addWidget(m_height_spin_box);
 }
@@ -163,7 +169,8 @@ void MainWindow::open() {
   }
   m_file_name = file_name;
   setWindowFilePath(m_file_name);
-  statusBar()->showMessage(QString(tr("Opened \"%1\"")).arg(m_file_name.split("/").back()));
+  statusBar()->showMessage(QString(tr("Opened \"%1\"")).
+    arg(m_file_name.split("/").back()));
   m_editor->load(m_file_name);
   m_refresh_action->setEnabled(true);
   m_show_original_action->setEnabled(true);
@@ -296,6 +303,8 @@ void MainWindow::update_layout_size_message() {
     .arg(rect.width()).arg(rect.height()));
   m_width_spin_box->blockSignals(true);
   m_width_spin_box->setValue(rect.width());
+  m_width_spin_box->blockSignals(false);
   m_height_spin_box->blockSignals(true);
   m_height_spin_box->setValue(rect.height());
+  m_height_spin_box->blockSignals(false);
 }

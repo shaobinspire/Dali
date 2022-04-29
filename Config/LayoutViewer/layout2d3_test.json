@@ -111,7 +111,6 @@
     ],
     "constraints": [
 	"0.width >=0",
-         "2.x > 500",
          "3.width >= 0",
  "5.width >= 0",
  "7.width >= 0",

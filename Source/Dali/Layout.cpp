@@ -312,7 +312,6 @@ Layout::~Layout() {
   for(auto box : m_boxes) {
     delete box;
   }
-  //m_thread.join();
 }
 
 QRect Layout::get_rect() const {
@@ -325,11 +324,13 @@ void Layout::set_rect(const QRect& rect) {
 
 void Layout::add_box(LayoutBox* box) {
   if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
-    m_min_fixed_box_width = std::min(m_min_fixed_box_width, box->get_rect().width());
+    m_min_fixed_box_width = std::min(m_min_fixed_box_width,
+      box->get_rect().width());
     m_total_fixed_box_width += box->get_rect().width();
   }
   if(box->get_vertical_size_policy() == SizePolicy::Fixed) {
-    m_min_fixed_box_height = std::min(m_min_fixed_box_height, box->get_rect().height());
+    m_min_fixed_box_height = std::min(m_min_fixed_box_height,
+      box->get_rect().height());
     m_total_fixed_box_height += box->get_rect().height();
   }
   m_area += box->get_rect().width() * box->get_rect().height();
@@ -366,14 +367,19 @@ LayoutBox* Layout::get_box(int index) const {
   return m_boxes[index];
 }
 
+QRect Layout::get_temporary_box_rect(int index) const {
+  if(index < 0 || index >= get_box_count()) {
+    throw std::out_of_range("The index is out of range.");
+  }
+  return m_boxes_rects[index];
+}
+
 QSize Layout::get_min_size() {
   return m_min_size;
-  //return m_min_size.get_future().get();
 }
 
 QSize Layout::get_max_size() {
   return m_max_size;
-  //return m_max_size.get_future().get();
 }
 
 void Layout::resize(const QSize& size) {
@@ -382,11 +388,13 @@ void Layout::resize(const QSize& size) {
     boxes_rects.push_back(box->get_rect());
   }
   auto rows = build_rows(boxes_rects);
-  auto horizontal_formulas = build_horizontal_formulas(m_horizontal_solver, m_boxes_names, rows);
+  auto horizontal_formulas =
+    build_horizontal_formulas(m_horizontal_solver, m_boxes_names, rows);
   auto widths = m_horizontal_solver.solve(horizontal_formulas, size.width());
   adjust_horizontal_layout(m_name_map, widths, rows, boxes_rects);
   auto columns = build_columns(boxes_rects);
-  auto vertical_formulas = build_vertical_formulas(m_vertical_solver, m_boxes_names, columns);
+  auto vertical_formulas =
+    build_vertical_formulas(m_vertical_solver, m_boxes_names, columns);
   auto heights = m_vertical_solver.solve(vertical_formulas, size.height());
   adjust_vertical_layout(m_name_map, heights, columns, boxes_rects);
   auto formulas = expr_vector(m_position_solver.get_context());
@@ -422,8 +430,6 @@ void Layout::resize(const QSize& size) {
 }
 
 void Layout::build_constraints() {
-  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
-  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
   m_position_solver.add_const_formula(
     m_position_constraints.convert(m_position_solver.get_context()));
   auto horizontal_expanding_box = std::vector<std::pair<int, int>>();
@@ -485,46 +491,25 @@ bool Layout::build() {
   if(m_area != m_rect.width() * m_rect.height()) {
     return false;
   }
+  m_total_fixed_box_width = std::max(m_total_fixed_box_width, m_rect.width());
+  m_total_fixed_box_height = std::max(m_total_fixed_box_height, m_rect.height());
   build_constraints();
   calculate_min_max_size();
   return true;
-}
-
-int Layout::get_index_by_name(const std::string& name) {
-  if(auto iter = m_name_map.find(name); iter != m_name_map.end()) {
-    return iter->second;
-  }
-  return -1;
-}
-
-const std::vector<QRect>& Layout::get_box_rect() const {
-  return m_boxes_rects;
 }
 
 Layout::Status Layout::get_status() const {
   return m_status;
 }
 
-
-
 void Layout::calculate_min_max_size() {
-  //auto horizontal_solver = Solver(source_horizontal_solver);
-  //auto vertical_solver = Solver(source_vertical_solver);
-  //auto horizontal_solver = Solver();
-  //auto vertical_solver = Solver();
-  //horizontal_solver.add_const_formula(
-  //  horizontal_constraints.convert(horizontal_solver.get_context()));
-  //vertical_solver.add_const_formula(
-  //  vertical_constraints.convert(vertical_solver.get_context()));
   auto horizontal_fixed_boxes = std::unordered_set<std::string>();
   auto vertical_fixed_boxes = std::unordered_set<std::string>();
   auto horizontal_additional_formulas = expr_vector(m_horizontal_solver.get_context());
   auto vertical_additional_formulas = expr_vector(m_vertical_solver.get_context());
   auto boxes_rects = std::vector<QRect>(m_boxes.size());
-  //auto names = std::vector<std::string>(m_boxes.size());
   for(auto i = 0; i < static_cast<int>(m_boxes.size()); ++i) {
     auto box = m_boxes[i];
-    //names[i] = box->get_name();
     boxes_rects[i] = box->get_rect();
     if(box->get_horizontal_size_policy() == SizePolicy::Fixed) {
       horizontal_fixed_boxes.insert(box->get_name());
@@ -547,28 +532,34 @@ void Layout::calculate_min_max_size() {
         m_vertical_solver.create_variable(LAYOUT_NAME));
     }
   }
-  //horizontal_solver.add_const_formula(horizontal_additional_formulas);
-  //vertical_solver.add_const_formula(vertical_additional_formulas);
   auto rows = build_rows(boxes_rects);
-  auto horizontal_formulas = build_horizontal_formulas(m_horizontal_solver, m_boxes_names, rows);
+  auto horizontal_formulas =
+    build_horizontal_formulas(m_horizontal_solver, m_boxes_names, rows);
   concatenate_to(horizontal_additional_formulas, horizontal_formulas);
   auto columns = build_columns(boxes_rects);
-  auto vertical_formulas = build_vertical_formulas(m_vertical_solver, m_boxes_names, columns);
+  auto vertical_formulas =
+    build_vertical_formulas(m_vertical_solver, m_boxes_names, columns);
   concatenate_to(vertical_additional_formulas, vertical_formulas);
   auto min_width = m_total_fixed_box_width;
   auto min_height = m_total_fixed_box_height;
   auto max_width = -1;
   auto max_height = -1;
-  for(auto height = m_min_fixed_box_height; height <= m_total_fixed_box_height; height += m_min_fixed_box_height) {
+  for(auto height = m_min_fixed_box_height; height <= m_total_fixed_box_height;
+      height += m_min_fixed_box_height) {
     auto tmp_boxes_rects = boxes_rects;
-    auto solutions = m_vertical_solver.solve(vertical_formulas, vertical_fixed_boxes, height);
+    auto solutions =
+      m_vertical_solver.solve(vertical_formulas, vertical_fixed_boxes, height);
     if(solutions.empty()) {
       continue;
     }
     for(auto& solution : solutions) {
       adjust_vertical_layout(m_name_map, solution, columns, tmp_boxes_rects);
-      auto new_horizontal_formulas = build_horizontal_formulas(m_horizontal_solver, m_boxes_names, build_rows(tmp_boxes_rects));
-      auto new_max_width = static_cast<int>(m_horizontal_solver.solve_maximum(new_horizontal_formulas, m_total_fixed_box_width));
+      auto new_horizontal_formulas =
+        build_horizontal_formulas(m_horizontal_solver, m_boxes_names,
+          build_rows(tmp_boxes_rects));
+      auto new_max_width =
+        static_cast<int>(m_horizontal_solver.solve_maximum(
+          new_horizontal_formulas, m_total_fixed_box_width));
       concatenate_to(horizontal_additional_formulas, new_horizontal_formulas);
       auto new_min_width = static_cast<int>(m_horizontal_solver.solve_minimum(
         new_horizontal_formulas, horizontal_fixed_boxes,
@@ -576,35 +567,47 @@ void Layout::calculate_min_max_size() {
       min_height = std::min(min_height, height);
       min_width = std::min(min_width, new_min_width);
       max_width = std::max(max_width, new_max_width);
-      if(min_width <= m_min_fixed_box_width && max_width >= m_total_fixed_box_width) {
+      if(min_width <= m_min_fixed_box_width &&
+          max_width >= m_total_fixed_box_width) {
         break;
       }
     }
-    if(min_width <= m_min_fixed_box_width && max_width >= m_total_fixed_box_width) {
+    if(min_width <= m_min_fixed_box_width &&
+        max_width >= m_total_fixed_box_width) {
       break;
     }
   }
-  for(auto width = m_min_fixed_box_width; width <= m_total_fixed_box_width; width += m_min_fixed_box_width) {
+  for(auto width = m_min_fixed_box_width; width <= m_total_fixed_box_width;
+      width += m_min_fixed_box_width) {
     auto tmp_boxes_rects = boxes_rects;
-    auto solutions = m_horizontal_solver.solve(horizontal_formulas, horizontal_fixed_boxes, width);
+    auto solutions =
+      m_horizontal_solver.solve(
+        horizontal_formulas, horizontal_fixed_boxes, width);
     if(solutions.empty()) {
       continue;
     }
     for(auto& solution : solutions) {
       adjust_horizontal_layout(m_name_map, solution, rows, tmp_boxes_rects);
-      auto new_vertical_formulas = build_vertical_formulas(m_vertical_solver, m_boxes_names, build_columns(tmp_boxes_rects));
-      auto new_max_height = static_cast<int>(m_vertical_solver.solve_maximum(new_vertical_formulas, m_total_fixed_box_height));
+      auto new_vertical_formulas =
+        build_vertical_formulas(m_vertical_solver, m_boxes_names,
+          build_columns(tmp_boxes_rects));
+      auto new_max_height =
+        static_cast<int>(m_vertical_solver.solve_maximum(new_vertical_formulas,
+          m_total_fixed_box_height));
       concatenate_to(vertical_additional_formulas, new_vertical_formulas);
       auto new_min_height = static_cast<int>(m_vertical_solver.solve_minimum(
-        new_vertical_formulas, vertical_fixed_boxes, m_min_fixed_box_height, min_height));
+        new_vertical_formulas, vertical_fixed_boxes,
+        m_min_fixed_box_height, min_height));
       min_width = std::min(min_width, width);
       min_height = std::min(min_height, new_min_height);
       max_height = std::max(max_height, new_max_height);
-      if(min_height <= m_min_fixed_box_height && max_height >= m_total_fixed_box_height) {
+      if(min_height <= m_min_fixed_box_height &&
+          max_height >= m_total_fixed_box_height) {
         break;
       }
     }
-    if(min_height <= m_min_fixed_box_height && max_height >= m_total_fixed_box_height) {
+    if(min_height <= m_min_fixed_box_height &&
+        max_height >= m_total_fixed_box_height) {
       break;
     }
   }

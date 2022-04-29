@@ -1,8 +1,6 @@
 #ifndef DALI_LAYOUT_H
 #define DALI_LAYOUT_H
-//#include <future>
 #include <set>
-//#include <thread>
 #include <unordered_map>
 #include <vector>
 #include <QRect>
@@ -36,7 +34,10 @@ namespace Dali {
 
       LayoutBox* get_box(int index) const;
 
+      QRect get_temporary_box_rect(int index) const;
+
       QSize get_min_size();
+
       QSize get_max_size();
 
       void resize(const QSize& size);
@@ -44,10 +45,6 @@ namespace Dali {
       void build_constraints();
 
       bool build();
-
-      int get_index_by_name(const std::string& name);
-
-      const std::vector<QRect>& get_box_rect() const;
 
       Status get_status() const;
 
@@ -64,8 +61,6 @@ namespace Dali {
       Solver m_vertical_solver;
       Solver m_position_solver;
       Status m_status;
-      //std::promise<QSize> m_min_size;
-      //std::promise<QSize> m_max_size;
       QSize m_min_size;
       QSize m_max_size;
       int m_min_fixed_box_width;
@@ -73,7 +68,6 @@ namespace Dali {
       int m_total_fixed_box_width;
       int m_total_fixed_box_height;
       int m_area;
-      //std::thread m_thread;
 
       void calculate_min_max_size();
   };
