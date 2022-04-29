@@ -1,5 +1,7 @@
 #include "LayoutViewer/JsonEditor.hpp"
 #include <iomanip>
+#include <QFont>
+#include <QFontMetrics>
 #include <QPainter>
 #include <QTextBlock>
 #include <fstream>
@@ -15,6 +17,7 @@ JsonEditor::JsonEditor(QWidget* parent)
     this, &JsonEditor::update_line_number_widget);
   connect(this, &JsonEditor::blockCountChanged,
     this, &JsonEditor::update_line_number_widget_width);
+  setTabStopDistance(4.0 * QFontMetrics(font()).horizontalAdvance(' '));
 }
 
 void JsonEditor::load(const QString& file_name) {
